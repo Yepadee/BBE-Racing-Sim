@@ -1,0 +1,21 @@
+{
+  "track_length" : 100,
+  "conditions" : [0.01, 1.0, 0.2, 0.3],
+  "competetors" : {
+    "preferences" : [
+      [0.01, 1.0, 0.2, 0.3],
+      [0.01, 0.5, 0.2, 0.3],
+      [0.0, 0.0, 0.0, 0.0]
+    ],
+    "distr" : [
+      {
+        "name" : "uniform",
+        "range" : [0, 1]
+      },
+      {
+        "name" : "uniform",
+        "range" : [0, 1]
+      }
+    ]
+  }
+}

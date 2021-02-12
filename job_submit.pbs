@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#PBS -N racing-sim
+#PBS -j oe
+#PBS -o output/racing-sim.out
+#PBS -q pascalq
+#PBS -l ngpus=1,walltime=00:00:10
+
+# Change the working directory (default is home directory)
+cd "$PBS_O_WORKDIR"
+
+# Select the GPU that we've been allocated
+device=$(cat $PBS_GPUFILE)
+device=${device#*gpu}
+export OCL_DEVICE=$device
+
+echo "Running on host: $(hostname)"
+echo "Time is: $(date)"
+echo "Directory is: $(pwd)"
+echo "PBS job ID is: $PBS_JOBID"
+echo "This jobs runs on the following machines: $(cat "$PBS_NODEFILE" | uniq)"
+echo "GPU selected: $OCL_DEVICE"
+echo
+
+module load cuda10.1/toolkit/10.1.243
+
+# Run the executable
+python3.6 RacingSim/sim.py
+
+module purge
