@@ -5,6 +5,7 @@
 
 
 __kernel void generate_randoms(
+    ulong offset, 
     global double* randoms
 )
 {
@@ -20,7 +21,7 @@ __kernel void update_positions(
 {
     int r = get_global_id(0);
     // Update each competetor
-    for (uchar c = 0; c < n_c; c++) {
+    for (int c = 0; c < n_c; c++) {
         positions(r, c) = randoms(r, c);
     }
 }

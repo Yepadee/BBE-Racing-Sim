@@ -7,14 +7,14 @@
       [0.01, 0.5, 0.2, 0.3],
       [0.0, 0.0, 0.0, 0.0]
     ],
-    "distr" : [
+    "dist_params" : [
       {
-        "name" : "uniform",
-        "range" : [0, 1]
+        "min" : 1.2,
+        "max" : 3.3
       },
       {
-        "name" : "uniform",
-        "range" : [0, 1]
+        "min" : 1.1,
+        "max" : 2.4
       }
     ]
   }

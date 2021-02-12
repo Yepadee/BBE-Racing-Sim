@@ -24,7 +24,7 @@ conditions = np.array(config["conditions"])
 competetors = config["competetors"]
 n_competetors = len(competetors)
 preferences = np.array(competetors["preferences"])
-distributions = competetors["distr"]
+dist_params = competetors["dist_params"]
 
 mag = np.sqrt(len(conditions))
 
@@ -58,8 +58,11 @@ queue = cl.CommandQueue(context)
 
 # Create the compute program from the source buffer
 # and build it
-options = "-D n_c=%d -D l=%d -D offset=%d" % (n_competetors, track_length, 0)
+options = "-D n_c=%d -D l=%d" % (n_competetors, track_length)
 program = cl.Program(context, kernelsource).build(options)
+
+h_rng_mins = [params["min"] for params in dist_params]
+h_rng_maxs = [params["max"] for params in dist_params]
 
 # Create initial positions vector to be returned from device
 h_positions = np.zeros(n_positions).astype(np.float64)
@@ -75,16 +78,19 @@ d_randoms = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_randoms) # Read and w
 # Start the timer
 rtime = time()
 
+offset = int(rtime)
+
 # Execute the kernel over the entire range of our 1d input
 # allowing OpenCL runtime to select the work group items for the device
+generate_randoms = program.generate_randoms
+generate_randoms.set_scalar_arg_dtypes([np.int64, None])
+
 update_positions = program.update_positions
 update_positions.set_scalar_arg_dtypes([None, None])
 
-generate_randoms = program.generate_randoms
-generate_randoms.set_scalar_arg_dtypes([None])
 
 for i in range(9):
-    generate_randoms(queue, h_randoms.shape, None, d_randoms)
+    generate_randoms(queue, h_randoms.shape, None, offset, d_randoms)
     update_positions(queue, (NUM_RACES,), None, d_randoms, d_positions)
 
 # Wait for the commands to finish before reading back
