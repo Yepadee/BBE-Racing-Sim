@@ -1,7 +1,7 @@
 Running on host: pascal-002
-Time is: Fri Feb 12 22:01:36 GMT 2021
+Time is: Fri Feb 12 22:19:06 GMT 2021
 Directory is: /home/br-jhawkins/projects/racing-sim
-PBS job ID is: 39244.master.gw4.metoffice.gov.uk
+PBS job ID is: 39263.master.gw4.metoffice.gov.uk
 This jobs runs on the following machines: 10.141.0.12
 GPU selected: 
 
@@ -10,6 +10,9 @@ GPU selected:
  [0.   0.   0.   0.  ]]
 p:  [1.0, 0.75, 0.4684691918618451]
 2
-The kernel ran in 0.015362262725830078 seconds
-[ 3.  7.  2. -4.  7.  6.  1.  2. -1.  5. -2. -9.  0. -9. -4. -7.  1.  2.
-  4. -6.]
+The kernel ran in 0.01334381103515625 seconds
+[0.12747705 0.37502461 0.38729555 0.61688799 0.22876412 0.391561
+ 0.18934183 0.00594227 0.53235087 0.36942728 0.62811755 0.53812759
+ 0.24177606 0.7527748  0.58759333 0.72100538 0.4501602  0.22189633
+ 0.35801146 0.84866249]
+0.428609888122559

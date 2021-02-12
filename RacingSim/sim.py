@@ -62,10 +62,10 @@ options = "-D n_c=%d -D l=%d -D offset=%d" % (n_competetors, track_length, 0)
 program = cl.Program(context, kernelsource).build(options)
 
 # Create initial positions vector to be returned from device
-h_positions = np.zeros(n_positions).astype(np.float32)
+h_positions = np.zeros(n_positions).astype(np.float64)
 
 # Create initial randoms vector to be returned from device
-h_randoms = np.zeros(n_positions).astype(np.float32)
+h_randoms = np.zeros(n_positions).astype(np.float64)
 
 # Create the input (a, b) arrays in device memory and copy data from host
 mf = cl.mem_flags
@@ -105,4 +105,5 @@ winners = find_winners(h_positions)
 
 # Test the results
 print(h_positions)
+print(np.mean(h_positions))
 #print(winners)

@@ -5,24 +5,23 @@
 
 
 __kernel void generate_randoms(
-    global int* randoms
+    global double* randoms
 )
 {
     int ii = get_global_id(0);
     mwc64x_state_t rng;
     MWC64X_SeedStreams(&rng, offset, 2);
-    randoms[ii] = MWC64X_NextUint(&rng);
+    randoms[ii] = MWC64X_NextUint(&rng) / (4294967295.0);
 }
 
 __kernel void update_positions(
-    global int* randoms,
-    global float* positions)
+    global double* randoms,
+    global double* positions)
 {
     int r = get_global_id(0);
-    
     // Update each competetor
     for (uchar c = 0; c < n_c; c++) {
-        positions(r, c) = randoms(r, c) % 10;
+        positions(r, c) = randoms(r, c);
     }
 }
 
