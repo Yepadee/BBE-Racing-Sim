@@ -6,7 +6,7 @@ See http://www.doc.ic.ac.uk/~dt10/research
 #ifndef dt10_mwc64x_rng_cl
 #define dt10_mwc64x_rng_cl
 
-#include "skip_mwc.cl"
+#include "RacingSim/kernel/skip_mwc.cl"
 
 //! Represents the state of a particular generator
 typedef struct{ uint x; uint c; } mwc64x_state_t;
