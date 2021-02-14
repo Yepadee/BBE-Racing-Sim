@@ -1,6 +1,6 @@
 {
-  "num_races" : 10,
-  "track_length" : 100,
+  "num_races" : 10000,
+  "track_length" : 1000,
   "conditions" : [0.01, 1.0, 0.2, 0.3],
   "competetors" : {
     "quantity" : 20,

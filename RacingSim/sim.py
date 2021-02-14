@@ -90,7 +90,7 @@ update_positions = program.update_positions
 update_positions.set_scalar_arg_dtypes([None, None, None, None, None])
 
 
-for i in range(1000):
+for i in range(400):
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
     update_positions(queue, (num_races,), None,
@@ -104,19 +104,14 @@ print("The kernel ran in", rtime, "seconds")
 # Read back the results from the compute device
 cl.enqueue_copy(queue, h_positions, d_positions)
 cl.enqueue_copy(queue, h_winners, d_winners)
-# Find winners
-def find_winners(positions):
-    return [np.argmax(p) for p in positions]
-
-winners = find_winners(h_positions)
-
-
 
 # Test the results
-print(h_positions)
-print(h_winners)
-print(np.mean(h_positions))
-#print(winners)
-best_racer = stats.mode(winners)[0] + 1
-print(best_racer)
-print(stats.mode(h_winners)[0])
+#print(h_positions)
+#print(h_winners)
+print("Avergage position: ", np.mean(h_positions))
+
+not_complete = np.argwhere(h_winners == 0).flatten()
+print("not finished: ", not_complete)
+
+best_racer = stats.mode(h_winners)[0]
+print("Best racer: ", best_racer)
