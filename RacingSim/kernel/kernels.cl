@@ -29,15 +29,14 @@ __kernel void update_positions(
     global uchar* winners)
 {
     int r = get_global_id(0);
+    int c = get_global_id(1);
     // Update each competetor
     uchar winner = winners[r];
     if (winner <= 0) {
-        for (int c = 0; c < n_c; c++) {
-            float diff = rng_maxs[c] - rng_mins[c];
-            float new_pos = positions(r, c) + u(randoms(r, c), rng_mins[c], rng_maxs[c]);
-            positions(r, c) = new_pos;
-            if (new_pos >= l) winners[r] = (c + 1);
-        }
+        float diff = rng_maxs[c] - rng_mins[c];
+        float new_pos = positions(r, c) + u(randoms(r, c), rng_mins[c], rng_maxs[c]);
+        positions(r, c) = new_pos;
+        if (new_pos >= l) winners[r] = (c + 1);
     }
 }
 

@@ -90,10 +90,10 @@ update_positions = program.update_positions
 update_positions.set_scalar_arg_dtypes([None, None, None, None, None])
 
 
-for i in range(400):
+for i in range(1000):
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
-    update_positions(queue, (num_races,), None,
+    update_positions(queue, (num_races,n_competetors), None,
         d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_winners)
 
 # Wait for the commands to finish before reading back
@@ -106,8 +106,8 @@ cl.enqueue_copy(queue, h_positions, d_positions)
 cl.enqueue_copy(queue, h_winners, d_winners)
 
 # Test the results
-#print(h_positions)
-#print(h_winners)
+print(h_positions)
+print(h_winners)
 print("Avergage position: ", np.mean(h_positions))
 
 not_complete = np.argwhere(h_winners == 0).flatten()

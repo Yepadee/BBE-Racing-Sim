@@ -1,11 +1,19 @@
 Running on host: pascal-002
-Time is: Sun Feb 14 17:51:16 GMT 2021
+Time is: Sun Feb 14 18:11:44 GMT 2021
 Directory is: /home/br-jhawkins/projects/racing-sim
-PBS job ID is: 39381.master.gw4.metoffice.gov.uk
+PBS job ID is: 39387.master.gw4.metoffice.gov.uk
 This jobs runs on the following machines: 10.141.0.12
 GPU selected: 
 
-The kernel ran in 2.0728940963745117 seconds
-Avergage position:  624.62634
+The kernel ran in 5.175105333328247 seconds
+[[606.9201  786.88745 530.16125 ... 563.19006 517.5837  302.91263]
+ [816.3002  675.05414 594.27356 ... 590.74835 622.3055  227.78123]
+ [545.4118  562.85004 675.43866 ... 514.5718  701.6345  361.33786]
+ ...
+ [471.20166 543.0384  535.3348  ... 559.05884 775.1748  307.39627]
+ [816.4406  773.7019  521.3811  ... 432.2539  466.52878 397.89325]
+ [882.7448  643.5837  602.2497  ... 711.1478  501.12036 244.08195]]
+[17 14 17 ... 14 11 14]
+Avergage position:  624.3315
 not finished:  []
-Best racer:  [17]
+Best racer:  [8]
