@@ -56,17 +56,20 @@ queue = cl.CommandQueue(context)
 options = "-D n_c=%d -D l=%d" % (n_competetors, track_length)
 program = cl.Program(context, kernelsource).build(options)
 
-h_rng_mins = np.array([params[0] for params in dist_params]).astype(np.float64)
-h_rng_maxs = np.array([params[1] for params in dist_params]).astype(np.float64)
+h_rng_mins = np.array([params[0] for params in dist_params]).astype(np.float32)
+h_rng_maxs = np.array([params[1] for params in dist_params]).astype(np.float32)
 
 # Create initial positions vector to be returned from device
-h_positions = np.zeros(n_positions).reshape((num_races, n_competetors)).astype(np.float64)
+h_positions = np.zeros(n_positions).reshape((num_races, n_competetors)).astype(np.float32)
+
+h_winners = np.zeros(num_races).astype(np.int8)
 
 # Create initial randoms vector to be returned from device
-h_randoms = np.zeros(n_positions).astype(np.float64)
+h_randoms = np.zeros(n_positions).astype(np.float32)
 
 # Create the input (a, b) arrays in device memory and copy data from host
 mf = cl.mem_flags
+d_winners = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_winners) # Read and write
 d_positions = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_positions) # Read and write
 d_randoms = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_randoms) # Read and write
 
@@ -84,14 +87,14 @@ generate_randoms = program.generate_randoms
 generate_randoms.set_scalar_arg_dtypes([np.int64, None])
 
 update_positions = program.update_positions
-update_positions.set_scalar_arg_dtypes([None, None, None, None])
+update_positions.set_scalar_arg_dtypes([None, None, None, None, None])
 
 
 for i in range(1000):
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
     update_positions(queue, (num_races,), None,
-        d_rng_mins, d_rng_maxs, d_randoms, d_positions)
+        d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_winners)
 
 # Wait for the commands to finish before reading back
 queue.finish()
@@ -100,7 +103,7 @@ print("The kernel ran in", rtime, "seconds")
 
 # Read back the results from the compute device
 cl.enqueue_copy(queue, h_positions, d_positions)
-
+cl.enqueue_copy(queue, h_winners, d_winners)
 # Find winners
 def find_winners(positions):
     return [np.argmax(p) for p in positions]
@@ -110,8 +113,10 @@ winners = find_winners(h_positions)
 
 
 # Test the results
-#print(h_positions)
-#print(np.mean(h_positions))
+print(h_positions)
+print(h_winners)
+print(np.mean(h_positions))
 #print(winners)
-best_racer = stats.mode(winners)[0]
+best_racer = stats.mode(winners)[0] + 1
 print(best_racer)
+print(stats.mode(h_winners)[0])
