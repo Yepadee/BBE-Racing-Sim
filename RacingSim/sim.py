@@ -20,8 +20,11 @@ f = open('config.json', 'r', encoding='utf-8')
 config = json.load(f)
 f.close()
 
-num_races = config["num_races"]
+n_races = config["num_races"]
+n_steps = config["num_steps"]
 track_length = config["track_length"]
+track_width = config["track_width"]
+clean_air_dist = config["clean_air_dist"]
 conditions = np.array(config["conditions"])
 competetors = config["competetors"]
 n_competetors = competetors["quantity"]
@@ -34,7 +37,9 @@ def condition_score(x):
     return 1.0 - np.linalg.norm(conditions-x)/mag
 
 preference_scores = [condition_score(p) for p in preferences]
-n_positions = num_races * n_competetors
+print("Preferences: ", preference_scores)
+
+n_positions = n_races * n_competetors
 
 #------------------------------------------------------------------------------
 f = open('RacingSim/kernel/kernels.cl', 'r', encoding='utf-8')
@@ -53,19 +58,19 @@ queue = cl.CommandQueue(context)
 
 # Create the compute program from the source buffer
 # and build it
-options = "-D n_c=%d -D l=%d" % (n_competetors, track_length)
+options = "-D n_c=%d -D n_r=%d -D l=%d -D w=%f -D clean_air_dist=%d" % (n_competetors, n_races, track_length, track_width, clean_air_dist)
 program = cl.Program(context, kernelsource).build(options)
 
 h_rng_mins = np.array([params[0] for params in dist_params]).astype(np.float32)
 h_rng_maxs = np.array([params[1] for params in dist_params]).astype(np.float32)
 
 # Create initial positions vector to be returned from device
-h_positions = np.zeros(n_positions).reshape((num_races, n_competetors)).astype(np.float32)
+h_positions = np.zeros(n_positions).reshape((n_races, n_competetors)).astype(np.float32)
 
-h_winners = np.zeros(num_races).astype(np.int8)
+h_winners = np.zeros(n_races).astype(np.int8)
 
 # Create initial randoms vector to be returned from device
-h_randoms = np.zeros(n_positions).astype(np.float32)
+h_randoms = np.zeros(2 * n_positions).astype(np.float32)
 
 # Create the input (a, b) arrays in device memory and copy data from host
 mf = cl.mem_flags
@@ -90,10 +95,11 @@ update_positions = program.update_positions
 update_positions.set_scalar_arg_dtypes([None, None, None, None, None])
 
 
-for i in range(1000):
+for i in range(n_steps):
+    offset += n_races
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
-    update_positions(queue, (num_races,n_competetors), None,
+    update_positions(queue, (n_races,n_competetors), None,
         d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_winners)
 
 # Wait for the commands to finish before reading back

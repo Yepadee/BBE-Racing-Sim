@@ -4,7 +4,7 @@
 #PBS -j oe
 #PBS -o output/racing-sim.out
 #PBS -q pascalq
-#PBS -l ngpus=1,walltime=00:00:10
+#PBS -l ngpus=1,walltime=00:00:20
 
 # Change the working directory (default is home directory)
 cd "$PBS_O_WORKDIR"
