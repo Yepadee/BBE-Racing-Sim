@@ -1,5 +1,5 @@
 {
-  "num_races" : 2,
+  "num_races" : 10000,
   "num_steps" : 1000,
   "track_length" : 1000,
   "track_width" : 4,

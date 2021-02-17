@@ -8,6 +8,7 @@ import pyopencl as cl
 # Import the Python Maths Library (for vectors)
 import numpy as np
 from scipy import stats
+import matplotlib.pyplot as plt
 
 # Import Standard Library to time the execution
 from time import time
@@ -121,3 +122,15 @@ print("not finished: ", not_complete)
 
 best_racer = stats.mode(h_winners)[0]
 print("Best racer: ", best_racer)
+
+#plt.rcParams.update({'figure.figsize':(7,5), 'figure.dpi':100})
+
+bins = np.arange(1, 20 + 0.5) - 0.5
+
+# then you plot away
+fig, ax = plt.subplots()
+_ = ax.hist(h_winners, bins)
+ax.set_xticks(bins + 0.5)
+plt.savefig('output/freq.png')
+
+print("plt saved")

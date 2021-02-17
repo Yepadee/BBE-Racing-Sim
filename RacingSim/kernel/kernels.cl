@@ -52,11 +52,8 @@ __kernel void update_positions(
     int c = get_global_id(1);
     // Update each competetor
     uchar winner = winners[r];
-    if (winner <= 0) {
-        float diff = rng_maxs[c] - rng_mins[c];
-        float new_pos = positions(r, c) + g(positions, randoms, r, c) * u(randoms(0, r, c), rng_mins[c], rng_maxs[c]);
-        positions(r, c) = new_pos;
-        if (new_pos >= l) winners[r] = (c + 1);
-    }
+    float no_winner_mask = winner == 0;
+    positions(r, c) += no_winner_mask * g(positions, randoms, r, c) * u(randoms(0, r, c), rng_mins[c], rng_maxs[c]);
+    if (positions(r, c) >= l) winners[r] = (c + 1);
 }
 
