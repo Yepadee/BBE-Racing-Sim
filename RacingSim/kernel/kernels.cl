@@ -1,6 +1,7 @@
 #include "RacingSim/kernel/mwc64x_rng.cl"
 
 #define positions(r, c) positions[c + r*n_c]
+#define tmp_positions(r, c) tmp_positions[c + r*n_c]
 #define randoms(n, r, c) randoms[c + r*n_c + n_c*n_r*n]
 
 
@@ -46,6 +47,7 @@ __kernel void update_positions(
     global float* rng_maxs,
     global float* randoms,
     global float* positions,
+    global float* tmp_positions,
     global uchar* winners)
 {
     int r = get_global_id(0);
@@ -53,7 +55,7 @@ __kernel void update_positions(
     // Update each competetor
     uchar winner = winners[r];
     float no_winner_mask = winner == 0;
-    positions(r, c) += no_winner_mask * g(positions, randoms, r, c) * u(randoms(0, r, c), rng_mins[c], rng_maxs[c]);
-    if (positions(r, c) >= l) winners[r] = (c + 1);
+    tmp_positions(r, c) = positions(r, c) + no_winner_mask * g(positions, randoms, r, c) * u(randoms(0, r, c), rng_mins[c], rng_maxs[c]);
+    if (tmp_positions(r, c) >= l) winners[r] = (c + 1);
 }
 

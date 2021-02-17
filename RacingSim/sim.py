@@ -77,6 +77,7 @@ h_randoms = np.zeros(2 * n_positions).astype(np.float32)
 mf = cl.mem_flags
 d_winners = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_winners) # Read and write
 d_positions = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_positions) # Read and write
+d_tmp_positions = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_positions) # Read and write
 d_randoms = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_randoms) # Read and write
 
 d_rng_mins = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_rng_mins) # Read and write
@@ -93,15 +94,19 @@ generate_randoms = program.generate_randoms
 generate_randoms.set_scalar_arg_dtypes([np.int64, None])
 
 update_positions = program.update_positions
-update_positions.set_scalar_arg_dtypes([None, None, None, None, None])
+update_positions.set_scalar_arg_dtypes([None, None, None, None, None, None])
 
-
-for i in range(n_steps):
+for i in range(n_steps // 2):
     offset += n_races
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
     update_positions(queue, (n_races,n_competetors), None,
-        d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_winners)
+        d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_tmp_positions, d_winners)
+    offset += n_races
+    generate_randoms(queue, h_randoms.shape, None,
+        offset, d_randoms)
+    update_positions(queue, (n_races,n_competetors), None,
+        d_rng_mins, d_rng_maxs, d_randoms, d_tmp_positions, d_positions, d_winners)
 
 # Wait for the commands to finish before reading back
 queue.finish()
