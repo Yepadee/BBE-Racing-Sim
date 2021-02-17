@@ -17,6 +17,7 @@ import json
 
 #------------------------------------------------------------------------------
 
+# Open and parse config
 f = open('config.json', 'r', encoding='utf-8')
 config = json.load(f)
 f.close()
@@ -62,26 +63,25 @@ queue = cl.CommandQueue(context)
 options = "-D n_c=%d -D n_r=%d -D l=%d -D w=%f -D clean_air_dist=%d" % (n_competetors, n_races, track_length, track_width, clean_air_dist)
 program = cl.Program(context, kernelsource).build(options)
 
+# Host Buffers
+h_preferences = np.array(preference_scores).astype(np.float32)
 h_rng_mins = np.array([params[0] for params in dist_params]).astype(np.float32)
 h_rng_maxs = np.array([params[1] for params in dist_params]).astype(np.float32)
 
-# Create initial positions vector to be returned from device
+h_randoms = np.zeros(2 * n_positions).astype(np.float32)
 h_positions = np.zeros(n_positions).reshape((n_races, n_competetors)).astype(np.float32)
-
 h_winners = np.zeros(n_races).astype(np.int8)
 
-# Create initial randoms vector to be returned from device
-h_randoms = np.zeros(2 * n_positions).astype(np.float32)
-
-# Create the input (a, b) arrays in device memory and copy data from host
+# Device Buffers
 mf = cl.mem_flags
-d_winners = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_winners) # Read and write
+d_preferences = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_preferences) # Read Only
+d_rng_mins = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_rng_mins) # Read Only
+d_rng_maxs = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_rng_maxs) # Read Only
+
+d_randoms = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_randoms) # Read and write
 d_positions = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_positions) # Read and write
 d_tmp_positions = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_positions) # Read and write
-d_randoms = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_randoms) # Read and write
-
-d_rng_mins = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_rng_mins) # Read and write
-d_rng_maxs = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_rng_maxs) # Read and write
+d_winners = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_winners) # Read and write
 
 # Start the timer
 rtime = time()
@@ -94,19 +94,19 @@ generate_randoms = program.generate_randoms
 generate_randoms.set_scalar_arg_dtypes([np.int64, None])
 
 update_positions = program.update_positions
-update_positions.set_scalar_arg_dtypes([None, None, None, None, None, None])
+update_positions.set_scalar_arg_dtypes([None, None, None, None, None, None, None])
 
 for i in range(n_steps // 2):
     offset += n_races
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
     update_positions(queue, (n_races,n_competetors), None,
-        d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_tmp_positions, d_winners)
+        d_preferences, d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_tmp_positions, d_winners)
     offset += n_races
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
     update_positions(queue, (n_races,n_competetors), None,
-        d_rng_mins, d_rng_maxs, d_randoms, d_tmp_positions, d_positions, d_winners)
+        d_preferences, d_rng_mins, d_rng_maxs, d_randoms, d_tmp_positions, d_positions, d_winners)
 
 # Wait for the commands to finish before reading back
 queue.finish()
@@ -117,7 +117,7 @@ print("The kernel ran in", rtime, "seconds")
 cl.enqueue_copy(queue, h_positions, d_positions)
 cl.enqueue_copy(queue, h_winners, d_winners)
 
-# Test the results
+# Print results
 print(h_positions)
 print(h_winners)
 print("Avergage position: ", np.mean(h_positions))
@@ -128,14 +128,9 @@ print("not finished: ", not_complete)
 best_racer = stats.mode(h_winners)[0]
 print("Best racer: ", best_racer)
 
-#plt.rcParams.update({'figure.figsize':(7,5), 'figure.dpi':100})
-
+# Plot competetor win frequencies
 bins = np.arange(1, 20 + 0.5) - 0.5
-
-# then you plot away
 fig, ax = plt.subplots()
 _ = ax.hist(h_winners, bins)
 ax.set_xticks(bins + 0.5)
 plt.savefig('output/freq.png')
-
-print("plt saved")

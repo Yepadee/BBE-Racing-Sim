@@ -43,6 +43,7 @@ float g(global float* positions, global float* randoms, int r, int c) {
 }
 
 __kernel void update_positions(
+    global float* preferences,
     global float* rng_mins,
     global float* rng_maxs,
     global float* randoms,
@@ -55,7 +56,7 @@ __kernel void update_positions(
     // Update each competetor
     uchar winner = winners[r];
     float no_winner_mask = winner == 0;
-    tmp_positions(r, c) = positions(r, c) + no_winner_mask * g(positions, randoms, r, c) * u(randoms(0, r, c), rng_mins[c], rng_maxs[c]);
+    tmp_positions(r, c) = positions(r, c) + no_winner_mask * preferences[c] * g(positions, randoms, r, c) * u(randoms(0, r, c), rng_mins[c], rng_maxs[c]);
     if (tmp_positions(r, c) >= l) winners[r] = (c + 1);
 }
 
