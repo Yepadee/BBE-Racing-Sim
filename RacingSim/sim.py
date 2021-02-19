@@ -24,14 +24,20 @@ f.close()
 
 n_races = config["num_races"]
 n_steps = config["num_steps"]
+
 track_length = config["track_length"]
 track_width = config["track_width"]
 clean_air_dist = config["clean_air_dist"]
-conditions = np.array(config["conditions"])
+
 competetors = config["competetors"]
 n_competetors = competetors["quantity"]
+
+conditions = np.array(config["conditions"])
 preferences = np.array(competetors["preferences"])
+
 dist_params = competetors["dist_params"]
+rng_mins = [params[0] for params in dist_params]
+rng_maxs = [params[1] for params in dist_params]
 
 mag = np.sqrt(len(conditions))
 
@@ -65,8 +71,8 @@ program = cl.Program(context, kernelsource).build(options)
 
 # Host Buffers
 h_preferences = np.array(preference_scores).astype(np.float32)
-h_rng_mins = np.array([params[0] for params in dist_params]).astype(np.float32)
-h_rng_maxs = np.array([params[1] for params in dist_params]).astype(np.float32)
+h_rng_mins = np.array(rng_mins).astype(np.float32)
+h_rng_maxs = np.array(rng_maxs).astype(np.float32)
 
 h_randoms = np.zeros(2 * n_positions).astype(np.float32)
 h_positions = np.zeros(n_positions).reshape((n_races, n_competetors)).astype(np.float32)
@@ -97,12 +103,13 @@ update_positions = program.update_positions
 update_positions.set_scalar_arg_dtypes([None, None, None, None, None, None, None])
 
 for i in range(n_steps // 2):
-    offset += n_races
+    offset += 2*n_positions
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
     update_positions(queue, (n_races,n_competetors), None,
         d_preferences, d_rng_mins, d_rng_maxs, d_randoms, d_positions, d_tmp_positions, d_winners)
-    offset += n_races
+
+    offset += 2*n_positions
     generate_randoms(queue, h_randoms.shape, None,
         offset, d_randoms)
     update_positions(queue, (n_races,n_competetors), None,

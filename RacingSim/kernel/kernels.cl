@@ -35,7 +35,8 @@ float g(global float* positions, global float* randoms, int r, int c) {
             total_distances += distance_from_c2;
         }
     }
-    float avg_distance = total_distances / (float) num_close_infront;
+
+    float avg_distance = (num_close_infront > 0) ? (total_distances / (float) num_close_infront) : 0.0f;
     float blockage_factor = (clean_air_dist - avg_distance) / clean_air_dist; // Between 0 and 1
     float prob = (float) num_close_infront / w;
     float rdm = randoms(1, r, c);

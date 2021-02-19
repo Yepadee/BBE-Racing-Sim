@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#PBS -N racing-sim-serial
+#PBS -j oe
+#PBS -o output/racing-sim-serial.out
+#PBS -q pascalq
+#PBS -l walltime=01:40:00
+
+# Change the working directory (default is home directory)
+cd "$PBS_O_WORKDIR"
+
+echo "Running on host: $(hostname)"
+echo "Time is: $(date)"
+echo "Directory is: $(pwd)"
+echo "PBS job ID is: $PBS_JOBID"
+echo "This jobs runs on the following machines: $(cat "$PBS_NODEFILE" | uniq)"
+echo "GPU selected: $OCL_DEVICE"
+echo
+
+
+# Run the executable
+python3.6 RacingSim/sim-serial.py
