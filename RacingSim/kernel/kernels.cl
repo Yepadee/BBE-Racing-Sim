@@ -43,9 +43,9 @@ __kernel void update_positions(
 {
     int r = get_global_id(0);
     int c = get_global_id(1);
-
+    int n = c + r*n_c;
     mwc64x_state_t rng;
-    MWC64X_SeedStreams(&rng, offset, 2);
+    MWC64X_SeedStreams(&rng, offset + n, 2);
     float rdm1 = (float) (MWC64X_NextUint(&rng) / (4294967295.0));
     float rdm2 = (float) (MWC64X_NextUint(&rng) / (4294967295.0));
 
