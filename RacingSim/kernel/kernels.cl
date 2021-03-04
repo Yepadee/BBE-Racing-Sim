@@ -3,6 +3,7 @@
 #define positions(r, c) positions[c + r*n_c]
 #define tmp_positions(r, c) tmp_positions[c + r*n_c]
 #define randoms(n, r, c) randoms[c + r*n_c + n_c*n_r*n]
+#define rngs(c, n) rngs[n + 2*c]
 
 inline float u(float rdm, float min, float max)
 {
@@ -31,10 +32,13 @@ inline float g(global float* positions, int r, int c, float rdm) {
     return 1.0f - ((rdm < prob) ? blockage_factor : 0.0f);
 }
 
+inline float r() {
+    
+}
+
 __kernel void update_positions(
     global float* preferences,
-    global float* rng_mins,
-    global float* rng_maxs,
+    global float* rngs,
     global float* positions,
     global float* tmp_positions,
     global uchar* winners,
@@ -51,8 +55,8 @@ __kernel void update_positions(
 
     // Update each competetor
     uchar winner = winners[r];
-    float no_winner_mask = winner == 0;
-    tmp_positions(r, c) = positions(r, c) + no_winner_mask * preferences[c] * g(positions, r, c, rdm1) * u(rdm2, rng_mins[c], rng_maxs[c]);
+    float no_winner_mask = winner == 0; //Only update position if a winner is found
+    tmp_positions(r, c) = positions(r, c) + no_winner_mask * preferences[c] * g(positions, r, c, rdm1) * u(rdm2, rngs(c, 0), rngs(c, 1));
     if (tmp_positions(r, c) >= l) winners[r] = (c + 1);
 }
 

@@ -35,9 +35,10 @@ n_competetors = competetors["quantity"]
 conditions = np.array(config["conditions"])
 preferences = np.array(competetors["preferences"])
 
-dist_params = competetors["dist_params"]
-rng_mins = [params[0] for params in dist_params]
-rng_maxs = [params[1] for params in dist_params]
+dist_params = np.array(competetors["dist_params"])
+rngs = dist_params.flatten()
+
+print(rngs)
 
 mag = np.sqrt(len(conditions))
 
@@ -71,8 +72,7 @@ program = cl.Program(context, kernelsource).build(options)
 
 # Host Buffers
 h_preferences = np.array(preference_scores).astype(np.float32)
-h_rng_mins = np.array(rng_mins).astype(np.float32)
-h_rng_maxs = np.array(rng_maxs).astype(np.float32)
+h_rngs = rngs.astype(np.float32)
 
 h_positions = np.zeros(n_positions).reshape((n_races, n_competetors)).astype(np.float32)
 h_winners = np.zeros(n_races).astype(np.int8)
@@ -80,8 +80,7 @@ h_winners = np.zeros(n_races).astype(np.int8)
 # Device Buffers
 mf = cl.mem_flags
 d_preferences = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_preferences) # Read Only
-d_rng_mins = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_rng_mins) # Read Only
-d_rng_maxs = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_rng_maxs) # Read Only
+d_rngs = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_rngs) # Read Only
 
 d_positions = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_positions) # Read and write
 d_tmp_positions = cl.Buffer(context, mf.COPY_HOST_PTR, hostbuf=h_positions) # Read and write
@@ -95,16 +94,16 @@ offset = int(rtime)
 # Execute the kernel over the entire range of our 1d input
 # allowing OpenCL runtime to select the work group items for the device
 update_positions = program.update_positions
-update_positions.set_scalar_arg_dtypes([None, None, None, None, None, None, np.int64])
+update_positions.set_scalar_arg_dtypes([None, None, None, None, None, np.int64])
 
 for i in range(n_steps // 2):
     offset += 2*n_positions
     update_positions(queue, (n_races,n_competetors), None,
-        d_preferences, d_rng_mins, d_rng_maxs, d_positions, d_tmp_positions, d_winners, offset)
+        d_preferences, d_rngs, d_positions, d_tmp_positions, d_winners, offset)
 
     offset += 2*n_positions
     update_positions(queue, (n_races,n_competetors), None,
-        d_preferences, d_rng_mins, d_rng_maxs, d_tmp_positions, d_positions, d_winners, offset)
+        d_preferences, d_rngs, d_tmp_positions, d_positions, d_winners, offset)
 
 # Wait for the commands to finish before reading back
 queue.finish()

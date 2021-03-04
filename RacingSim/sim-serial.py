@@ -39,8 +39,8 @@ preference_scores = [condition_score(p) for p in preferences]
 
 n_positions = n_races * n_competetors
 
-positions = np.zeros(n_positions).astype(np.float32)
-tmp_positions = np.zeros(n_positions).astype(np.float32)
+h_positions = np.zeros(n_positions).astype(np.float32)
+h_tmp_positions = np.zeros(n_positions).astype(np.float32)
 
 def u(min, max):
     rnd = random()
@@ -84,9 +84,8 @@ winners = np.zeros(n_races)
 for t in range(n_steps // 2):
     for r in range(n_races):
         for c in range(n_competetors):
-            update_competetor(c, r, rng_mins, rng_maxs, positions, tmp_positions, winners)
-            update_competetor(c, r, rng_mins, rng_maxs, tmp_positions, positions, winners)
-            
+            update_competetor(c, r, rng_mins, rng_maxs, h_positions, h_tmp_positions, winners)
+            update_competetor(c, r, rng_mins, rng_maxs, h_tmp_positions, h_positions, winners)
 
 rtime = time() - rtime
 print("The kernel ran in", rtime, "seconds")
