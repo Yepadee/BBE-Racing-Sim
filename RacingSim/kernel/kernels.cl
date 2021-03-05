@@ -2,8 +2,10 @@
 
 #define positions(r, c) positions[c + r*n_c]
 #define tmp_positions(r, c) tmp_positions[c + r*n_c]
-#define randoms(n, r, c) randoms[c + r*n_c + n_c*n_r*n]
+
 #define rngs(c, n) rngs[n + 2*c]
+#define rs(c, n) rs[n + 3*c]
+#define ts(c, n) ts[n + 2*c]
 
 inline float u(float rdm, float min, float max)
 {
@@ -32,13 +34,22 @@ inline float g(global float* positions, int r, int c, float rdm) {
     return 1.0f - ((rdm < prob) ? blockage_factor : 0.0f);
 }
 
-inline float r() {
-    
+inline float resp(int c, float pos, global float* rs, global float* ts) {
+    float percent_complete = pos / (float) l;
+    float r;
+    float t1 = ts(c, 0);
+    float t2 = 1.0f - ts(c, 1);
+    if (percent_complete < t1) r = rs(c, 0);
+    else if (percent_complete < t2) r = rs(c, 1);
+    else r = rs(c, 2);
+    return r;
 }
 
 __kernel void update_positions(
     global float* preferences,
     global float* rngs,
+    global float* rs,
+    global float* ts,
     global float* positions,
     global float* tmp_positions,
     global uchar* winners,
@@ -49,14 +60,15 @@ __kernel void update_positions(
     int c = get_global_id(1);
     int n = c + r*n_c;
     mwc64x_state_t rng;
-    MWC64X_SeedStreams(&rng, offset + n, 2);
+    MWC64X_SeedStreams(&rng, offset + 2*n, 2);
     float rdm1 = (float) (MWC64X_NextUint(&rng) / (4294967295.0));
     float rdm2 = (float) (MWC64X_NextUint(&rng) / (4294967295.0));
 
     // Update each competetor
     uchar winner = winners[r];
     float no_winner_mask = winner == 0; //Only update position if a winner is found
-    tmp_positions(r, c) = positions(r, c) + no_winner_mask * preferences[c] * g(positions, r, c, rdm1) * u(rdm2, rngs(c, 0), rngs(c, 1));
+    float pos = positions(r, c);
+    tmp_positions(r, c) = pos + no_winner_mask * preferences[c] * g(positions, r, c, rdm1) * u(rdm2, rngs(c, 0), rngs(c, 1)) * resp(c, pos, rs, ts);
     if (tmp_positions(r, c) >= l) winners[r] = (c + 1);
 }
 
