@@ -62,7 +62,7 @@ class RaceSim(object):
 
     def __build_program(self, context):
         # Load kernel
-        f = open('RacingSim/kernel/kernels.cl', 'r', encoding='utf-8')
+        f = open('kernel/kernels.cl', 'r', encoding='utf-8')
         kernelsource = ''.join(f.readlines())
         f.close()
 
