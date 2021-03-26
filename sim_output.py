@@ -7,4 +7,4 @@ def plot_winners(winners):
     fig, ax = plt.subplots()
     _ = ax.hist(winners, bins)
     ax.set_xticks(bins + 0.5)
-    plt.savefig('output/resp2/freq.png')
+    plt.savefig('output/freq.png')

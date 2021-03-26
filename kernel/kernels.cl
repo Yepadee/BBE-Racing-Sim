@@ -1,4 +1,4 @@
-#include "RacingSim/kernel/mwc64x_rng.cl"
+#include "kernel/mwc64x_rng.cl"
 
 #define positions(r, c) positions[c + r*n_c]
 #define tmp_positions(r, c) tmp_positions[c + r*n_c]
