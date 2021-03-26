@@ -57,7 +57,6 @@ n_steps = 800
 racesim = RaceSimParallel(n_steps, n_races, track_params, competetor_params)
 competetor_positions = np.zeros(competetor_params.n_competetors).astype(np.float32)
 
-
 winners = racesim.simulate_races(competetor_positions)
 
 print(winners)
