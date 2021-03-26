@@ -15,7 +15,7 @@ from time import time
 
 import json
 
-from racesim import *
+from racesim import RaceSimSerial, RaceSimParallel, TrackParams, CompetetorParams
 from sim_output import plot_winners
 
 #------------------------------------------------------------------------------

@@ -2,6 +2,22 @@ import pyopencl as cl
 import numpy as np
 from time import time
 
+def get_gpu_context():
+    all_platforms = cl.get_platforms()
+    platform = next((p for p in all_platforms if
+                     p.get_devices(device_type=cl.device_type.GPU) != []),
+                     None)
+    my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
+    return cl.Context(devices=my_gpu_devices)
+
+def get_cpu_context():
+    all_platforms = cl.get_platforms()
+    platform = next((p for p in all_platforms if
+                     p.get_devices(device_type=cl.device_type.CPU) != []),
+                     None)
+    my_gpu_devices = platform.get_devices(device_type=cl.device_type.CPU)
+    return cl.Context(devices=my_gpu_devices)
+
 class TrackParams(object):
     def __init__(self, length, width, clean_air_dist):
         self.length = length
@@ -96,7 +112,7 @@ class RaceSim(object):
 
 class RaceSimSerial(RaceSim):
     def __init__(self, track_params, competetor_params):
-        context = cl.create_some_context() # TODO get cpu context
+        context = get_cpu_context()
         super().__init__(context, 1, track_params, competetor_params)
 
     def get_competetor_positions(self):
@@ -111,7 +127,7 @@ class RaceSimSerial(RaceSim):
 class RaceSimParallel(RaceSim):
     def __init__(self, max_steps, n_races, track_params, competetor_params):
         self.max_steps = max_steps
-        context = cl.create_some_context() # TODO get gpu context
+        context = get_gpu_context()
         super().__init__(context, n_races, track_params, competetor_params)
 
     def __get_steps_remaining(self, max_steps, competetor_positions, track_length) -> int:
