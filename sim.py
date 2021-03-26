@@ -20,12 +20,13 @@ from sim_output import plot_winners
 
 #------------------------------------------------------------------------------
 
-# Open and parse config
-f = open('config.json', 'r', encoding='utf-8')
-config = json.load(f)
-f.close()
 
-def load_racesim(config):
+def load_racesim():
+    # Open and parse config
+    f = open('config.json', 'r', encoding='utf-8')
+    config = json.load(f)
+    f.close()
+
     track_length = config["track_length"]
     track_width = config["track_width"]
     clean_air_dist = config["clean_air_dist"]
@@ -49,15 +50,23 @@ def load_racesim(config):
 
     return track_params, competetor_params, n_steps
 
-track_params, competetor_params, n_steps = load_racesim(config)
 
-n_races = 10000
-n_steps = 800
+if __name__ == "__main__":
+    track_params, competetor_params, n_steps = load_racesim()
 
-racesim = RaceSimParallel(n_steps, n_races, track_params, competetor_params)
-competetor_positions = np.zeros(competetor_params.n_competetors).astype(np.float32)
+    n_races = 10000
 
-winners = racesim.simulate_races(competetor_positions)
+    race_sim_serial = RaceSimSerial(track_params, competetor_params)
+    race_sim_parallel = RaceSimParallel(n_steps, n_races, track_params, competetor_params)
 
-print(winners)
-plot_winners(winners)
+    race_sim_serial.step(100)
+    print(race_sim_serial.get_competetor_positions())
+
+    
+
+    competetor_positions = np.zeros(competetor_params.n_competetors).astype(np.float32)
+
+    #winners = race_sim_parallel.simulate_races(competetor_positions)
+
+    #print(winners)
+    #plot_winners(winners)

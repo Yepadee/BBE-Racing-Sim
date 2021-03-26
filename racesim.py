@@ -95,7 +95,7 @@ class RaceSim(object):
 
 
 class RaceSimSerial(RaceSim):
-    def __init__(self, context, track_params, competetor_params):
+    def __init__(self, track_params, competetor_params):
         context = cl.create_some_context() # TODO get cpu context
         super().__init__(context, 1, track_params, competetor_params)
 
