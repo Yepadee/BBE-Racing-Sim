@@ -8,7 +8,6 @@ class TrackParams(object):
         self.width = width
         self.clean_air_dist = clean_air_dist
 
-
 class CompetetorParams(object):
     def __init__(self, n_competetors: int, track_conditions, track_preferences, dist_params, resp_levels, resp_durations):
         self.n_competetors = n_competetors
@@ -50,6 +49,8 @@ class RaceSim(object):
         self.d_tmp_positions = None
         self.d_winnder = None
 
+        self.set_competetor_positions(np.zeros(competetor_params.n_competetors).astype(np.float32))
+
         # Create a command queue
         self.queue = cl.CommandQueue(context)
 
@@ -79,17 +80,17 @@ class RaceSim(object):
         self.d_tmp_positions = cl.Buffer(self.context, mf.COPY_HOST_PTR, hostbuf=self.h_positions) # Read and write
         self.d_winners = cl.Buffer(self.context, mf.COPY_HOST_PTR, hostbuf=self.h_winners) # Read and write
 
-    def step(self):
-        self.offset += 2*self.n_positions
+    def _step(self, n_steps):
+        for i in range(n_steps):
+            self.offset += 2*self.n_positions
+            self.update_positions(self.queue, (self.n_races, self.competetor_params.n_competetors), None,
+                self.d_preferences, self.d_rngs, self.d_resp_levels, self.d_resp_durations, self.d_positions, self.d_tmp_positions, self.d_winners, self.offset)
 
-        self.update_positions(self.queue, (self.n_races, self.competetor_params.n_competetors), None,
-            self.d_preferences, self.d_rngs, self.d_resp_levels, self.d_resp_durations, self.d_positions, self.d_tmp_positions, self.d_winners, self.offset)
+            self.offset += 2*self.n_positions
+            self.update_positions(self.queue, (self.n_races,self.competetor_params.n_competetors), None,
+                self.d_preferences, self.d_rngs, self.d_resp_levels, self.d_resp_durations, self.d_tmp_positions, self.d_positions, self.d_winners, self.offset)
 
-        self.offset += 2*self.n_positions
-        self.update_positions(self.queue, (self.n_races,self.competetor_params.n_competetors), None,
-            self.d_preferences, self.d_rngs, self.d_resp_levels, self.d_resp_durations, self.d_tmp_positions, self.d_positions, self.d_winners, self.offset)
-
-    def stop(self):
+    def _stop(self):
         self.queue.finish()
 
     def get_competetor_positions(self):
@@ -100,3 +101,34 @@ class RaceSim(object):
         cl.enqueue_copy(self.queue, self.h_winners, self.d_winners)
         return self.h_winners
 
+class RaceSimSerial(RaceSim):
+    def __init__(self, context, n_races, track_params, competetor_params):
+        context = cl.create_some_context() # TODO get cpu context
+        super().__init__(context, n_races, track_params, competetor_params)
+
+class RaceSimParallel(RaceSim):
+    def __init__(self, max_steps, n_races, track_params, competetor_params):
+        self.max_steps = max_steps
+        context = cl.create_some_context() # TODO get gpu context
+        super().__init__(context, n_races, track_params, competetor_params)
+
+    def __get_steps_remaining(self, max_steps, competetor_positions, track_length) -> int:
+        min_pos = min(competetor_positions)
+        percent_complete = min_pos / track_length
+        return int(max_steps * (1.0 - percent_complete)) // 2
+
+    def simulate_races(self, competetor_positions):
+        self.set_competetor_positions(competetor_positions)
+
+        rtime = time()
+
+        n_steps = self.__get_steps_remaining(self.max_steps, competetor_positions, self.track_params.length)
+        print("n_steps: ", n_steps)
+        self._step(n_steps)
+
+        self._stop()
+
+        rtime = time() - rtime
+        print("The kernel ran in", rtime, "seconds")
+
+        return self.get_winners()
