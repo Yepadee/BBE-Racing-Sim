@@ -23,7 +23,7 @@ from sim_output import plot_winners
 
 def load_racesim():
     # Open and parse config
-    f = open('config.json', 'r', encoding='utf-8')
+    f = open('resources/config.json', 'r', encoding='utf-8')
     config = json.load(f)
     f.close()
 
