@@ -59,14 +59,10 @@ if __name__ == "__main__":
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_steps, n_races, track_params, competetor_params)
 
-    race_sim_serial.step(100)
-    print(race_sim_serial.get_competetor_positions())
+    race_sim_serial.step(200)
+    competetor_positions = race_sim_serial.get_competetor_positions()
 
-    
+    winners = race_sim_parallel.simulate_races(competetor_positions)
 
-    competetor_positions = np.zeros(competetor_params.n_competetors).astype(np.float32)
-
-    #winners = race_sim_parallel.simulate_races(competetor_positions)
-
-    #print(winners)
-    #plot_winners(winners)
+    print(winners)
+    plot_winners(winners)

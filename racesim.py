@@ -80,7 +80,7 @@ class RaceSim(object):
         self.__d_tmp_positions = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_positions) # Read and write
         self._d_winners = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_winners) # Read and write
 
-    def step(self, n_steps):
+    def _step(self, n_steps):
         for i in range(n_steps):
             self.offset += 2*self.__n_positions
             self.update_positions(self._queue, (self.__n_races, self._competetor_params.n_competetors), None,
@@ -102,7 +102,10 @@ class RaceSimSerial(RaceSim):
     def get_competetor_positions(self):
         self._stop()
         cl.enqueue_copy(self._queue, self._h_positions, self._d_positions)
-        return self._h_positions
+        return self._h_positions[0]
+
+    def step(self, n_steps):
+        self._step(n_steps)
 
 
 class RaceSimParallel(RaceSim):
@@ -124,7 +127,7 @@ class RaceSimParallel(RaceSim):
         n_steps = self.__get_steps_remaining(self.max_steps, competetor_positions, self._track_params.length)
         print("n_steps: ", n_steps)
 
-        self.step(n_steps)
+        self._step(n_steps)
         self._stop()
 
         rtime = time() - rtime
