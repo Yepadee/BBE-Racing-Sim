@@ -222,7 +222,7 @@ class RaceSimParallel(RaceSim):
 
 if __name__ == "__main__":
     from sim_output import plot_winners
-    track_params, competetor_params, n_steps = load_racesim()
+    track_params, competetor_params, n_steps = load_racesim_params()
 
     n_races = 10000
 
