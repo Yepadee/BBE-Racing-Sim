@@ -1,6 +1,40 @@
 import pyopencl as cl
 import numpy as np
 from time import time
+import json
+
+def load_racesim():
+    '''
+    Open and parse racesim config
+    Returns the racetrack and competetor parameters,
+    also the number of steps required to run a full race
+    '''
+    f = open('resources/config.json', 'r', encoding='utf-8')
+    config = json.load(f)
+    f.close()
+
+    track_length = config["track_length"]
+    track_width = config["track_width"]
+    clean_air_dist = config["clean_air_dist"]
+
+    n_steps = config["num_steps"]
+
+    competetors = config["competetors"]
+    n_competetors = competetors["quantity"]
+
+    conditions = np.array(config["conditions"]).astype(np.float32)
+    preferences = np.array(competetors["preferences"]).astype(np.float32)
+
+    dist_params = np.array(competetors["dist_params"]).flatten().astype(np.float32)
+
+    responsiveness = competetors["responsiveness"]
+    resp_levels = np.array(responsiveness["levels"]).flatten().astype(np.float32)
+    resp_durations = np.array(responsiveness["durations"]).flatten().astype(np.float32)
+
+    track_params = TrackParams(track_length, track_width, clean_air_dist)
+    competetor_params = CompetetorParams(n_competetors, conditions, preferences, dist_params, resp_levels, resp_durations)
+
+    return track_params, competetor_params, n_steps
 
 def get_gpu_context():
     '''Search for and return a gpu context'''
@@ -185,3 +219,20 @@ class RaceSimParallel(RaceSim):
         '''
         cl.enqueue_copy(self._queue, self._h_winners, self._d_winners)
         return self._h_winners
+
+if __name__ == "__main__":
+    from sim_output import plot_winners
+    track_params, competetor_params, n_steps = load_racesim()
+
+    n_races = 10000
+
+    race_sim_serial = RaceSimSerial(track_params, competetor_params)
+    race_sim_parallel = RaceSimParallel(n_steps, n_races, track_params, competetor_params)
+
+    race_sim_serial.step(200)
+    competetor_positions = race_sim_serial.get_competetor_positions()
+
+    winners = race_sim_parallel.simulate_races(competetor_positions)
+
+    print(winners)
+    plot_winners(winners)
