@@ -3,7 +3,7 @@ import numpy as np
 from time import time
 import json
 
-def load_racesim():
+def load_racesim_params():
     '''
     Open and parse racesim config
     Returns the racetrack and competetor parameters,
