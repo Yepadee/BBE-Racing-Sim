@@ -1,6 +1,7 @@
 import pyopencl as cl
 import numpy as np
 from time import time
+import os 
 import json
 
 def load_racesim_params():
@@ -120,8 +121,12 @@ class RaceSim(object):
         Returns resultant program
         '''
         # Load kernel
-        f = open('kernel/kernels.cl', 'r', encoding='utf-8')
+
+        kernel_locaiton = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        kernel_locaiton += "/kernel"
+        f = open(f'{kernel_locaiton}/kernels.cl', 'r', encoding='utf-8')
         kernelsource = ''.join(f.readlines())
+        kernelsource.replace("<kernel_location>", kernel_locaiton)
         f.close()
 
         options = "-D n_c=%d -D n_r=%d -D l=%d -D w=%f -D clean_air_dist=%d" % (self._competetor_params.n_competetors, self.__n_races, self._track_params.length, self._track_params.width, self._track_params.clean_air_dist)
