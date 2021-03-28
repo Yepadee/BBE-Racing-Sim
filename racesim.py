@@ -32,10 +32,10 @@ def load_racesim_params():
     resp_levels = np.array(responsiveness["levels"]).flatten().astype(np.float32)
     resp_durations = np.array(responsiveness["durations"]).flatten().astype(np.float32)
 
-    track_params = TrackParams(track_length, track_width, clean_air_dist)
+    track_params = TrackParams(track_length, track_width, clean_air_dist, n_steps)
     competetor_params = CompetetorParams(n_competetors, conditions, preferences, dist_params, resp_levels, resp_durations)
 
-    return track_params, competetor_params, n_steps
+    return track_params, competetor_params
 
 def get_gpu_context():
     '''Search for and return a gpu context'''
@@ -56,10 +56,11 @@ def get_cpu_context():
     return cl.Context(devices=my_gpu_devices)
 
 class TrackParams(object):
-    def __init__(self, length: int, width: int, clean_air_dist: int):
+    def __init__(self, length: int, width: int, clean_air_dist: int, n_steps: int):
         self.length = length
         self.width = width
         self.clean_air_dist = clean_air_dist
+        self.n_steps = n_steps
 
 class CompetetorParams(object):
     def __init__(self, n_competetors: int, track_conditions: np.array(np.float32),
@@ -182,8 +183,7 @@ class RaceSimSerial(RaceSim):
 
 
 class RaceSimParallel(RaceSim):
-    def __init__(self, max_steps: int, n_races: int, track_params: TrackParams, competetor_params: CompetetorParams):
-        self.max_steps = max_steps
+    def __init__(self, n_races: int, track_params: TrackParams, competetor_params: CompetetorParams):
         context = get_gpu_context()
         super().__init__(context, n_races, track_params, competetor_params)
 
@@ -205,7 +205,7 @@ class RaceSimParallel(RaceSim):
 
         rtime = time()
 
-        n_steps = self.__get_steps_remaining(self.max_steps, competetor_positions, self._track_params.length)
+        n_steps = self.__get_steps_remaining(self._track_params.n_steps, competetor_positions, self._track_params.length)
         print("n_steps: ", n_steps)
 
         self._step(n_steps)
@@ -226,12 +226,12 @@ class RaceSimParallel(RaceSim):
 
 if __name__ == "__main__":
     from sim_output import plot_winners
-    track_params, competetor_params, n_steps = load_racesim_params()
+    track_params, competetor_params = load_racesim_params()
 
     n_races = 10000
 
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
-    race_sim_parallel = RaceSimParallel(n_steps, n_races, track_params, competetor_params)
+    race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
 
     race_sim_serial.step(200)
     competetor_positions = race_sim_serial.get_competetor_positions()
