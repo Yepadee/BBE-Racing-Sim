@@ -2,17 +2,7 @@
 # Racing Simulator
 #
 
-# Import the Python OpenCL API
-import pyopencl as cl
-
-# Import the Python Maths Library (for vectors)
 import numpy as np
-from scipy import stats
-import matplotlib.pyplot as plt
-
-# Import Standard Library to time the execution
-from time import time
-
 import json
 
 from racesim import RaceSimSerial, RaceSimParallel, TrackParams, CompetetorParams
@@ -22,7 +12,11 @@ from sim_output import plot_winners
 
 
 def load_racesim():
-    # Open and parse config
+    '''
+    Open and parse racesim config
+    Returns the racetrack and competetor parameters,
+    also the number of steps required to run a full race
+    '''
     f = open('resources/config.json', 'r', encoding='utf-8')
     config = json.load(f)
     f.close()

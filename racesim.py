@@ -3,6 +3,7 @@ import numpy as np
 from time import time
 
 def get_gpu_context():
+    '''Search for and return a gpu context'''
     all_platforms = cl.get_platforms()
     platform = next((p for p in all_platforms if
                      p.get_devices(device_type=cl.device_type.GPU) != []),
@@ -11,6 +12,7 @@ def get_gpu_context():
     return cl.Context(devices=my_gpu_devices)
 
 def get_cpu_context():
+    '''Search for and return a cpu context'''
     all_platforms = cl.get_platforms()
     platform = next((p for p in all_platforms if
                      p.get_devices(device_type=cl.device_type.CPU) != []),
@@ -77,6 +79,10 @@ class RaceSim(object):
         self.offset = int(time())
 
     def __build_program(self, context):
+        '''
+        Load kernel and build program for chosen device (gpu/cpu)
+        Returns resultant program
+        '''
         # Load kernel
         f = open('kernel/kernels.cl', 'r', encoding='utf-8')
         kernelsource = ''.join(f.readlines())
@@ -86,6 +92,10 @@ class RaceSim(object):
         return cl.Program(context, kernelsource).build(options)
 
     def __format_positions(self, positions):
+        '''
+        Allocate memory for competetor positions using
+        provided positions for each race instance
+        '''
         return np.tile(positions, (self.__n_races, 1)).astype(np.float32)
 
     def set_competetor_positions(self, competetor_positions):
@@ -97,6 +107,7 @@ class RaceSim(object):
         self._d_winners = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_winners) # Read and write
 
     def _step(self, n_steps):
+        '''Complete 'n_steps' of the simulation'''
         for i in range(n_steps):
             self.offset += 2*self.__n_positions
             self.update_positions(self._queue, (self.__n_races, self._competetor_params.n_competetors), None,
@@ -107,6 +118,7 @@ class RaceSim(object):
                 self.__d_preferences, self.__d_rngs, self.__d_resp_levels, self.__d_resp_durations, self.__d_tmp_positions, self._d_positions, self._d_winners, self.offset)
 
     def _stop(self):
+        '''Wait for the queue to finish so data may be transferred from the device'''
         self._queue.finish()
 
 
@@ -116,11 +128,16 @@ class RaceSimSerial(RaceSim):
         super().__init__(context, 1, track_params, competetor_params)
 
     def get_competetor_positions(self):
+        '''
+        Copy competetor positions from the device
+        Returns the copied competetor positions
+        '''
         self._stop()
         cl.enqueue_copy(self._queue, self._h_positions, self._d_positions)
         return self._h_positions[0]
 
     def step(self, n_steps):
+        '''Complete 'n_steps' of the simulation'''
         self._step(n_steps)
 
 
@@ -131,11 +148,19 @@ class RaceSimParallel(RaceSim):
         super().__init__(context, n_races, track_params, competetor_params)
 
     def __get_steps_remaining(self, max_steps, competetor_positions, track_length) -> int:
+        '''
+        Calculate and return how many more steps of the simulation
+        need to take place before all races have finished
+        '''
         min_pos = min(competetor_positions)
         percent_complete = min_pos / track_length
         return int(max_steps * (1.0 - percent_complete)) // 2
 
     def simulate_races(self, competetor_positions):
+        '''
+        Run the racing simulation with competetors starting
+        from the positions defined in 'competetor_positions'
+        '''
         self.set_competetor_positions(competetor_positions)
 
         rtime = time()
@@ -152,5 +177,9 @@ class RaceSimParallel(RaceSim):
         return self.get_winners()
 
     def get_winners(self):
+        '''
+        Copy the race winners from the device
+        Returns the copied winners
+        '''
         cl.enqueue_copy(self._queue, self._h_winners, self._d_winners)
         return self._h_winners
