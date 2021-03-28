@@ -121,12 +121,11 @@ class RaceSim(object):
         Returns resultant program
         '''
         # Load kernel
-
         kernel_locaiton = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
         kernel_locaiton += "/kernel"
         f = open(f'{kernel_locaiton}/kernels.cl', 'r', encoding='utf-8')
         kernelsource = ''.join(f.readlines())
-        kernelsource.replace("<kernel_location>", kernel_locaiton)
+        kernelsource = kernelsource.replace("<kernel_location>", kernel_locaiton)
         f.close()
 
         options = "-D n_c=%d -D n_r=%d -D l=%d -D w=%f -D clean_air_dist=%d" % (self._competetor_params.n_competetors, self.__n_races, self._track_params.length, self._track_params.width, self._track_params.clean_air_dist)
@@ -195,7 +194,7 @@ class RaceSimParallel(RaceSim):
         '''
         min_pos = min(competetor_positions)
         percent_complete = min_pos / track_length
-        return int(max_steps * (1.0 - percent_complete)) // 2
+        return int(max_steps * (1.0 - percent_complete))
 
     def simulate_races(self, competetor_positions: np.array(np.float32)) -> np.array(np.int8):
         '''
@@ -240,4 +239,4 @@ if __name__ == "__main__":
     winners = race_sim_parallel.simulate_races(competetor_positions)
 
     print(winners)
-    plot_winners(winners)
+    plot_winners(winners, "output/fig")
