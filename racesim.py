@@ -126,7 +126,7 @@ class RaceSim(object):
         kernel_locaiton += "/kernel"
         f = open(f'{kernel_locaiton}/kernels.cl', 'r', encoding='utf-8')
         kernelsource = ''.join(f.readlines())
-        kernelsource.replace("<kernel_location>", kernel_locaiton)
+        kernelsource = kernelsource.replace("<kernel_location>", kernel_locaiton)
         f.close()
 
         options = "-D n_c=%d -D n_r=%d -D l=%d -D w=%f -D clean_air_dist=%d" % (self._competetor_params.n_competetors, self.__n_races, self._track_params.length, self._track_params.width, self._track_params.clean_air_dist)
@@ -231,13 +231,14 @@ if __name__ == "__main__":
 
     n_races = 10000
 
-    race_sim_serial = RaceSimSerial(track_params, competetor_params)
+    #race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_steps, n_races, track_params, competetor_params)
 
-    race_sim_serial.step(200)
-    competetor_positions = race_sim_serial.get_competetor_positions()
+    #race_sim_serial.step(200)
+    #competetor_positions = race_sim_serial.get_competetor_positions()
+    np.array
 
-    winners = race_sim_parallel.simulate_races(competetor_positions)
+    winners = race_sim_parallel.simulate_races(np.zeros(20))
 
     print(winners)
     plot_winners(winners)
