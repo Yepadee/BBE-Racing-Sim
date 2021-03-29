@@ -3,6 +3,8 @@ import numpy as np
 from time import time
 import os 
 import json
+import os
+os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
 def load_racesim_params():
     '''
@@ -52,8 +54,9 @@ def get_cpu_context():
     platform = next((p for p in all_platforms if
                      p.get_devices(device_type=cl.device_type.CPU) != []),
                      None)
-    my_gpu_devices = platform.get_devices(device_type=cl.device_type.CPU)
-    return cl.Context(devices=my_gpu_devices)
+    my_cpu_devices = platform.get_devices(device_type=cl.device_type.CPU)
+    print(my_cpu_devices)
+    return cl.Context(devices=my_cpu_devices)
 
 class TrackParams(object):
     def __init__(self, length: int, width: int, clean_air_dist: int, n_steps: int):
@@ -163,10 +166,9 @@ class RaceSim(object):
         '''Wait for the queue to finish so data may be transferred from the device'''
         self._queue.finish()
 
-
 class RaceSimSerial(RaceSim):
     def __init__(self, track_params: TrackParams, competetor_params: CompetetorParams):
-        context = get_cpu_context()
+        context = get_gpu_context()
         super().__init__(context, 1, track_params, competetor_params)
 
     def get_competetor_positions(self) -> np.array(np.float32):
@@ -181,7 +183,6 @@ class RaceSimSerial(RaceSim):
     def step(self, n_steps) -> None:
         '''Complete 'n_steps' of the simulation'''
         self._step(n_steps)
-
 
 class RaceSimParallel(RaceSim):
     def __init__(self, n_races: int, track_params: TrackParams, competetor_params: CompetetorParams):
@@ -231,14 +232,14 @@ if __name__ == "__main__":
 
     n_races = 10000
 
-    #race_sim_serial = RaceSimSerial(track_params, competetor_params)
+    race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
 
     #race_sim_serial.step(200)
     #competetor_positions = race_sim_serial.get_competetor_positions()
-    np.array
 
     winners = race_sim_parallel.simulate_races(np.zeros(20))
+    print(np.sum(winners == 20))
 
     print(winners)
-    plot_winners(winners, "output/fig")
+    plot_winners(competetor_params.n_competetors, winners, "output/fig")
