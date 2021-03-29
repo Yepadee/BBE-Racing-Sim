@@ -166,6 +166,14 @@ class RaceSim(object):
         '''Wait for the queue to finish so data may be transferred from the device'''
         self._queue.finish()
 
+    def _get_winners(self) -> np.array(np.int8):
+        '''
+        Copy the race winners from the device
+        Returns the copied winners
+        '''
+        cl.enqueue_copy(self._queue, self._h_winners, self._d_winners)
+        return self._h_winners
+
 class RaceSimSerial(RaceSim):
     def __init__(self, track_params: TrackParams, competetor_params: CompetetorParams):
         context = get_gpu_context()
@@ -183,6 +191,16 @@ class RaceSimSerial(RaceSim):
     def step(self, n_steps) -> None:
         '''Complete 'n_steps' of the simulation'''
         self._step(n_steps)
+
+    def is_finished(self) -> bool:
+        positions: np.array(np.float32) = self.get_competetor_positions()
+        return np.count_nonzero(positions > self._track_params.length)
+
+    def get_winner(self) -> int:
+        '''
+        Return the race winner from the device
+        '''
+        return self._get_winners()[0]
 
 class RaceSimParallel(RaceSim):
     def __init__(self, n_races: int, track_params: TrackParams, competetor_params: CompetetorParams):
@@ -216,15 +234,7 @@ class RaceSimParallel(RaceSim):
         rtime = time() - rtime
         print("The kernel ran in", rtime, "seconds")
 
-        return self.__get_winners()
-
-    def __get_winners(self) -> np.array(np.int8):
-        '''
-        Copy the race winners from the device
-        Returns the copied winners
-        '''
-        cl.enqueue_copy(self._queue, self._h_winners, self._d_winners)
-        return self._h_winners
+        return self._get_winners()
 
 if __name__ == "__main__":
     from sim_output import plot_winners
