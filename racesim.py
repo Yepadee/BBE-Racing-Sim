@@ -172,6 +172,8 @@ class RaceSim(object):
         Returns the copied winners
         '''
         cl.enqueue_copy(self._queue, self._h_winners, self._d_winners)
+        if np.count_nonzero(self._h_winners == 0):
+            raise Exception("Not all races were finished. Consider increaseing 'num_steps'")
         return self._h_winners
 
 class RaceSimSerial(RaceSim):
@@ -179,18 +181,25 @@ class RaceSimSerial(RaceSim):
         context = get_gpu_context()
         super().__init__(context, 1, track_params, competetor_params)
 
-    def get_competetor_positions(self) -> np.array(np.float32):
-        '''
-        Copy competetor positions from the device
-        Returns the copied competetor positions
-        '''
+    def __load_competetor_positions(self) -> None:
+        '''Copy competetor positions from the device'''
         self._stop()
         cl.enqueue_copy(self._queue, self._h_positions, self._d_positions)
+
+    def get_competetor_positions(self) -> np.array(np.float32):
+        '''Returns the competetor positions'''
         return self._h_positions[0]
+
+    def get_percent_complete(self) -> float:
+        positions: np.array(np.float32) = self.get_competetor_positions()
+        max_position = np.max(positions)
+        print(max_position)
+        return max_position / self._track_params.length
 
     def step(self, n_steps) -> None:
         '''Complete 'n_steps' of the simulation'''
         self._step(n_steps)
+        self.__load_competetor_positions()
 
     def is_finished(self) -> bool:
         positions: np.array(np.float32) = self.get_competetor_positions()
@@ -249,7 +258,7 @@ if __name__ == "__main__":
     #competetor_positions = race_sim_serial.get_competetor_positions()
 
     winners = race_sim_parallel.simulate_races(np.zeros(20))
-    print(np.sum(winners == 20))
+    print(np.sum(winners == 0))
 
     print(winners)
     plot_winners(competetor_params.n_competetors, winners, "output/fig")
