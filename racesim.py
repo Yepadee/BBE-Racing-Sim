@@ -152,7 +152,6 @@ class RaceSim(object):
 
     def _step(self, n_steps: int) -> None:
         '''Complete 'n_steps' of the simulation'''
-        n_steps = n_steps // 2
         for i in range(n_steps):
             self.offset += 2*self.__n_positions
             self.update_positions(self._queue, (self.__n_races, self._competetor_params.n_competetors), None,
@@ -193,7 +192,6 @@ class RaceSimSerial(RaceSim):
     def get_percent_complete(self) -> float:
         positions: np.array(np.float32) = self.get_competetor_positions()
         max_position = np.max(positions)
-        print(max_position)
         return max_position / self._track_params.length
 
     def step(self, n_steps) -> None:
