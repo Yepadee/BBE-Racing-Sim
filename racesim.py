@@ -72,10 +72,13 @@ class CompetetorParams(object):
         self.n_competetors = n_competetors
         mag = np.sqrt(len(track_conditions))
 
+
         def condition_score(x):
-            return 1.0 - np.linalg.norm(track_conditions-x)/mag
+            score = 1.0 - np.linalg.norm(track_conditions-x)/mag
+            return 0.8 + 0.2 * score
 
         self.preference_scores = np.array([condition_score(p) for p in track_preferences]).astype(np.float32)
+
         self.dist_params = dist_params
         self.resp_levels = resp_levels
         self.resp_durations = resp_durations
