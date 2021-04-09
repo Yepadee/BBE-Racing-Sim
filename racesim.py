@@ -12,6 +12,8 @@ def load_racesim_params():
     Returns the racetrack and competetor parameters,
     also the number of steps required to run a full race
     '''
+    # path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    # print(path)
     f = open('resources/racesim-config.json', 'r', encoding='utf-8')
     config = json.load(f)
     f.close()
