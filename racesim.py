@@ -194,7 +194,7 @@ class RaceSim(object):
 
 class RaceSimSerial(RaceSim):
     def __init__(self, track_params: TrackParams, competetor_params: CompetetorParams):
-        context = get_gpu_context()
+        context = get_cpu_context()
         super().__init__(context, 1, track_params, competetor_params)
 
     def __load_competetor_positions(self) -> None:
@@ -264,9 +264,9 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 16384
+    n_races = 32000
 
-    race_sim_serial = RaceSimSerial(track_params, competetor_params)
+    #race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
 
     #race_sim_serial.step(200)
