@@ -69,7 +69,7 @@ __kernel void update_positions(
             float u1 = rngs(c, 0);
             float u2 = rngs(c, 1);
 
-            tmp_positions(r, c) = pos + u(rdm1, u1, u2) *
+            tmp_positions(r, c) = pos + preferences[c] * u(rdm1, u1, u2) *
                                         g(positions, r, c, rdm2) *
                                         resp(c, pos, rs, ts);
 

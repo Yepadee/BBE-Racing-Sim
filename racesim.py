@@ -35,6 +35,8 @@ def load_racesim_params():
     competetors = config["competetors"]
     n_competetors = competetors["quantity"]
 
+    preference_weight = config["preference_weight"]
+    max_condition_value = config["max_condition_value"]
     conditions = np.array(config["conditions"]).astype(np.float32)
     preferences = np.array(competetors["preferences"]).astype(np.float32)
 
@@ -45,7 +47,7 @@ def load_racesim_params():
     resp_durations = np.array(responsiveness["durations"]).flatten().astype(np.float32)
 
     track_params = TrackParams(track_length, track_width, clean_air_dist, n_steps)
-    competetor_params = CompetetorParams(n_competetors, conditions, preferences, dist_params, resp_levels, resp_durations)
+    competetor_params = CompetetorParams(n_competetors, preference_weight, max_condition_value, conditions, preferences, dist_params, resp_levels, resp_durations)
 
     return track_params, competetor_params
 
@@ -76,16 +78,17 @@ class TrackParams(object):
         self.n_steps = n_steps
 
 class CompetetorParams(object):
-    def __init__(self, n_competetors: int, track_conditions: np.array(np.float32),
-                 track_preferences: np.array(np.float32), dist_params: np.array(np.float32),
-                 resp_levels: np.array(np.float32), resp_durations: np.array(np.float32)):
+    def __init__(self, n_competetors: int, preference_weight: float, max_condition_value: float,
+            track_conditions: np.array(np.float32), track_preferences: np.array(np.float32),
+            dist_params: np.array(np.float32), resp_levels: np.array(np.float32),
+            resp_durations: np.array(np.float32)
+        ):
+        
         self.n_competetors = n_competetors
-        mag = np.sqrt(len(track_conditions))
-
 
         def condition_score(x):
-            score = 1.0 - np.linalg.norm(track_conditions-x)/mag
-            return 0.8 + 0.2 * score
+            score = 1.0 - np.linalg.norm(abs(track_conditions-x))/max_condition_value
+            return (1.0 - preference_weight) + preference_weight * score
 
         self.preference_scores = np.array([condition_score(p) for p in track_preferences]).astype(np.float32)
 
@@ -261,7 +264,7 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 64000
+    n_races = 16384
 
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
