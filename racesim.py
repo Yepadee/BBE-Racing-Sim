@@ -261,7 +261,7 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 32000
+    n_races = 64000
 
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
