@@ -8,6 +8,12 @@ import os
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
 def pick_winner(potential_winners_bits):
+    '''
+    More than one competetor may have crossed the finish line
+    in the last simulated moment.
+    From these winners, pick one at random.
+    '''
+
     potential_winners = []
     for i, c in enumerate(bin(potential_winners_bits)[:1:-1], 1):
         if c == '1':
@@ -38,13 +44,13 @@ def load_racesim_params():
     preference_weight = config["preference_weight"]
     max_condition_value = config["max_condition_value"]
     conditions = np.array(config["conditions"]).astype(np.float32)
-    preferences = np.array(competetors["preferences"]).astype(np.float32)
+    preferences = np.array(competetors["preferences"][:n_competetors]).astype(np.float32)
 
-    dist_params = np.array(competetors["dist_params"]).flatten().astype(np.float32)
+    dist_params = np.array(competetors["dist_params"][:n_competetors]).flatten().astype(np.float32)
 
     responsiveness = competetors["responsiveness"]
-    resp_levels = np.array(responsiveness["levels"]).flatten().astype(np.float32)
-    resp_durations = np.array(responsiveness["durations"]).flatten().astype(np.float32)
+    resp_levels = np.array(responsiveness["levels"][:n_competetors]).flatten().astype(np.float32)
+    resp_durations = np.array(responsiveness["durations"][:n_competetors]).flatten().astype(np.float32)
 
     track_params = TrackParams(track_length, track_width, clean_air_dist, n_steps)
     competetor_params = CompetetorParams(n_competetors, preference_weight, max_condition_value, conditions, preferences, dist_params, resp_levels, resp_durations)
