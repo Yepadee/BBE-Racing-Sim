@@ -52,23 +52,29 @@ __kernel void update_positions(
     global float* ts,
     global float* positions,
     global float* tmp_positions,
-    global uchar* winners,
+    global int* winners,
     ulong offset
     )
 {
     int r = get_global_id(0);
-    int c = get_global_id(1);
-    int n = c + r*n_c;
     mwc64x_state_t rng;
-    MWC64X_SeedStreams(&rng, offset + 2*n, 2);
-    float rdm1 = (float) (MWC64X_NextUint(&rng) / (4294967295.0));
-    float rdm2 = (float) (MWC64X_NextUint(&rng) / (4294967295.0));
+    MWC64X_SeedStreams(&rng, offset, 2*n_c); // We pick two random numbers for each competetor.
+    if (winners[r] == 0) {
+        for (int c = 0; c < n_c; c++) {
+            // Generate two random floats between 0 and 1
+            float rdm1 = (MWC64X_NextUint(&rng) / (4294967295.0));  
+            float rdm2 = (MWC64X_NextUint(&rng) / (4294967295.0));
 
-    // Update each competetor
-    uchar winner = winners[r];
-    float no_winner_mask = winner == 0; //Only update position if a winner is found
-    float pos = positions(r, c);
-    tmp_positions(r, c) = pos + no_winner_mask * preferences[c] * g(positions, r, c, rdm1) * u(rdm2, rngs(c, 0), rngs(c, 1)) * resp(c, pos, rs, ts);
-    if (tmp_positions(r, c) >= l) winners[r] = (c + 1);
+            float pos = positions(r, c);
+            float u1 = rngs(c, 0);
+            float u2 = rngs(c, 1);
+
+            tmp_positions(r, c) = pos + u(rdm1, u1, u2) *
+                                        g(positions, r, c, rdm2) *
+                                        resp(c, pos, rs, ts);
+
+            if (tmp_positions(r, c) >= l) winners[r] = (1 << c) | winners[r];
+        }
+    }  
 }
 

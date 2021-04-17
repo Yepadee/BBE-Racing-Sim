@@ -1,10 +1,18 @@
 import pyopencl as cl
 import numpy as np
 from time import time
+import random
 import os 
 import json
 import os
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
+
+def pick_winner(potential_winners_bits):
+    potential_winners = []
+    for i, c in enumerate(bin(potential_winners_bits)[:1:-1], 1):
+        if c == '1':
+            potential_winners.append(i)
+    return random.choice(potential_winners)
 
 def load_racesim_params():
     '''
@@ -149,7 +157,7 @@ class RaceSim(object):
 
     def set_competetor_positions(self, competetor_positions: np.array(np.float32)) -> None:
         self._h_positions = self.__format_positions(competetor_positions)
-        self._h_winners = np.zeros(self.__n_races).astype(np.int8)
+        self._h_winners = np.zeros(self.__n_races).astype(np.int32)
         mf = cl.mem_flags
         self._d_positions = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_positions) # Read and write
         self.__d_tmp_positions = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_positions) # Read and write
@@ -159,11 +167,11 @@ class RaceSim(object):
         '''Complete 'n_steps' of the simulation'''
         for i in range(n_steps):
             self.offset += 2*self.__n_positions
-            self.update_positions(self._queue, (self.__n_races, self._competetor_params.n_competetors), None,
+            self.update_positions(self._queue, (self.__n_races,), None,
                 self.__d_preferences, self.__d_rngs, self.__d_resp_levels, self.__d_resp_durations, self._d_positions, self.__d_tmp_positions, self._d_winners, self.offset)
 
             self.offset += 2*self.__n_positions
-            self.update_positions(self._queue, (self.__n_races, self._competetor_params.n_competetors), None,
+            self.update_positions(self._queue, (self.__n_races,), None,
                 self.__d_preferences, self.__d_rngs, self.__d_resp_levels, self.__d_resp_durations, self.__d_tmp_positions, self._d_positions, self._d_winners, self.offset)
 
     def _stop(self) -> None:
@@ -176,9 +184,10 @@ class RaceSim(object):
         Returns the copied winners
         '''
         cl.enqueue_copy(self._queue, self._h_winners, self._d_winners)
+        num_incomplete: int = np.sum(self._h_winners == 0)
         if np.count_nonzero(self._h_winners == 0):
-            raise Exception("Not all races were finished. Consider increaseing 'num_steps'")
-        return self._h_winners
+            raise Exception(f"{num_incomplete} races did not finish. Consider increaseing 'num_steps'")
+        return np.array([pick_winner(winner) for winner in self._h_winners]).astype(np.int8)
 
 class RaceSimSerial(RaceSim):
     def __init__(self, track_params: TrackParams, competetor_params: CompetetorParams):
@@ -252,7 +261,7 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 10000
+    n_races = 32000
 
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
@@ -261,7 +270,5 @@ if __name__ == "__main__":
     #competetor_positions = race_sim_serial.get_competetor_positions()
 
     winners = race_sim_parallel.simulate_races(np.zeros(20))
-    print(np.sum(winners == 0))
 
-    print(winners)
     plot_winners(competetor_params.n_competetors, winners, "output/fig")
