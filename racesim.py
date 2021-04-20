@@ -85,9 +85,9 @@ class TrackParams(object):
 
 class CompetetorParams(object):
     def __init__(self, n_competetors: int, preference_weight: float, max_condition_value: float,
-            track_conditions: np.array(np.float32), track_preferences: np.array(np.float32),
-            dist_params: np.array(np.float32), resp_levels: np.array(np.float32),
-            resp_durations: np.array(np.float32)
+            track_conditions: np.float32, track_preferences: np.float32,
+            dist_params: np.float32, resp_levels: np.float32,
+            resp_durations: np.float32
         ):
         
         self.n_competetors = n_competetors
@@ -157,14 +157,14 @@ class RaceSim(object):
         options = "-D n_c=%d -D n_r=%d -D l=%d -D w=%f -D clean_air_dist=%d" % (self._competetor_params.n_competetors, self.__n_races, self._track_params.length, self._track_params.width, self._track_params.clean_air_dist)
         return cl.Program(context, kernelsource).build(options)
 
-    def __format_positions(self, positions: np.array(np.float32)) -> np.array(np.float32):
+    def __format_positions(self, positions: np.float32) -> np.float32:
         '''
         Allocate memory for competetor positions using
         provided positions for each race instance
         '''
         return np.tile(positions, (self.__n_races, 1)).astype(np.float32)
 
-    def set_competetor_positions(self, competetor_positions: np.array(np.float32)) -> None:
+    def set_competetor_positions(self, competetor_positions: np.float32) -> None:
         self._h_positions = self.__format_positions(competetor_positions)
         self._h_winners = np.zeros(self.__n_races).astype(np.int32)
         mf = cl.mem_flags
@@ -193,10 +193,7 @@ class RaceSim(object):
         Returns the copied winners
         '''
         cl.enqueue_copy(self._queue, self._h_winners, self._d_winners)
-        num_incomplete: int = np.sum(self._h_winners == 0)
-        if np.count_nonzero(self._h_winners == 0):
-            raise Exception(f"{num_incomplete} races did not finish. Consider increaseing 'num_steps'")
-        return np.array([pick_winner(winner) for winner in self._h_winners]).astype(np.int8)
+        return self._h_winners
 
 class RaceSimSerial(RaceSim):
     def __init__(self, track_params: TrackParams, competetor_params: CompetetorParams):
@@ -213,7 +210,7 @@ class RaceSimSerial(RaceSim):
         return self._h_positions[0]
 
     def get_percent_complete(self) -> float:
-        positions: np.array(np.float32) = self.get_competetor_positions()
+        positions: np.float32 = self.get_competetor_positions()
         max_position = np.max(positions)
         return max_position / self._track_params.length
 
@@ -223,21 +220,24 @@ class RaceSimSerial(RaceSim):
         self.__load_competetor_positions()
 
     def is_finished(self) -> bool:
-        positions: np.array(np.float32) = self.get_competetor_positions()
-        return np.count_nonzero(positions > self._track_params.length)
+        return self.get_winner() != 0
 
     def get_winner(self) -> int:
         '''
         Return the race winner from the device
         '''
-        return self._get_winners()[0]
+        winners = self._get_winners()[0]
+        if winners != 0:
+            return pick_winner(winners)
+        else:
+            return winners
 
 class RaceSimParallel(RaceSim):
     def __init__(self, n_races: int, track_params: TrackParams, competetor_params: CompetetorParams):
         context = get_gpu_context()
         super().__init__(context, n_races, track_params, competetor_params)
 
-    def __get_steps_remaining(self, max_steps: int, competetor_positions: np.array(np.float32), track_length: int) -> int:
+    def __get_steps_remaining(self, max_steps: int, competetor_positions: np.float32, track_length: int) -> int:
         '''
         Calculate and return how many more steps of the simulation
         need to take place before all races have finished
@@ -246,7 +246,7 @@ class RaceSimParallel(RaceSim):
         percent_complete = min_pos / track_length
         return int(max_steps * (1.0 - percent_complete))
 
-    def simulate_races(self, competetor_positions: np.array(np.float32)) -> np.array(np.int8):
+    def simulate_races(self, competetor_positions: np.float32) -> np.array(np.int8):
         '''
         Run the racing simulation with competetors starting
         from the positions defined in 'competetor_positions'
@@ -264,7 +264,12 @@ class RaceSimParallel(RaceSim):
         rtime = time() - rtime
         print("The kernel ran in", rtime, "seconds")
 
-        return self._get_winners()
+        winners =  self._get_winners()
+        num_incomplete: int = np.sum(winners == 0)
+        if np.count_nonzero(self._h_winners == 0):
+            raise Exception(f"{num_incomplete} races did not finish. Consider increaseing 'num_steps'")
+
+        return np.array([pick_winner(winner) for winner in self._h_winners]).astype(np.int8)
 
 if __name__ == "__main__":
     from sim_output import plot_winners
