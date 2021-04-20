@@ -20,6 +20,34 @@ def pick_winner(potential_winners_bits):
             potential_winners.append(i)
     return random.choice(potential_winners)
 
+def prob_to_odds(prob: np.float32) -> np.int32:
+    '''
+    Calculate and return decimal odds from event probability.
+    Cap an event with 0 prob to odds of 1000.
+    '''
+    if prob == 0:
+        prob = 0.0001
+    inverse = 1.0 / prob
+    if inverse < 1000:
+        integer_odds = round(inverse * 100)
+        if integer_odds == 1:
+            integer_odds += 1
+        return integer_odds
+    else:
+        return 1000 * 100
+
+def calculate_decimal_odds(n_events: int, predicted_winners: np.int8) -> np.int32:
+    winner_freqs: np.int32 = np.zeros(n_events)
+    for i in range(n_events):
+        event_id = i + 1
+        winner_freqs[i] = float(np.count_nonzero(predicted_winners == event_id))
+    probs: np.int32 =  winner_freqs / predicted_winners.size
+    return np.array([prob_to_odds(prob) for prob in probs])
+
+
+
+
+
 def load_racesim_params():
     '''
     Open and parse racesim config
@@ -166,7 +194,7 @@ class RaceSim(object):
 
     def set_competetor_positions(self, competetor_positions: np.float32) -> None:
         self._h_positions = self.__format_positions(competetor_positions)
-        self._h_winners = np.zeros(self.__n_races).astype(np.int32)
+        self._h_winners = np.zeros(self.__n_races).astype(np.int64)
         mf = cl.mem_flags
         self._d_positions = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_positions) # Read and write
         self.__d_tmp_positions = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_positions) # Read and write

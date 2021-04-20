@@ -52,7 +52,7 @@ __kernel void update_positions(
     global float* ts,
     global float* positions,
     global float* tmp_positions,
-    global int* winners,
+    global long* winners,
     ulong offset
     )
 {
