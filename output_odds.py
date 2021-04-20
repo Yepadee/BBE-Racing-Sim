@@ -32,9 +32,9 @@ def plot_positions(n_competetors: int, positions: np.float32, fig_path: str) -> 
     cm = plt.get_cmap('gist_rainbow')
     ax.set_prop_cycle(color=[cm(1.*i/n_competetors) for i in range(n_competetors)])
     ax.step(xs, positions)
-    #ax.set_ylim([1,20])
-    #ax.legend(np.arange(n_competetors), title='Horse', bbox_to_anchor=(1.00, 1), loc='upper left', fontsize='x-small')
+    ax.legend(np.arange(1, n_competetors + 1), title='Horse', bbox_to_anchor=(1.00, 1), loc='upper left', fontsize='x-small')
     
+
     ax.set_ylabel('Position/m')
     ax.set_xlabel('Time/s')
     

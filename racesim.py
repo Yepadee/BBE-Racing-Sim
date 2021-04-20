@@ -235,7 +235,7 @@ class RaceSimSerial(RaceSim):
 
     def get_competetor_positions(self) -> np.array(np.float32):
         '''Returns the competetor positions'''
-        return self._h_positions[0]
+        return np.copy(self._h_positions[0])
 
     def get_percent_complete(self) -> float:
         positions: np.float32 = self.get_competetor_positions()
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 32000
+    n_races = 100000
 
     #race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
@@ -311,6 +311,6 @@ if __name__ == "__main__":
     #race_sim_serial.step(200)
     #competetor_positions = race_sim_serial.get_competetor_positions()
 
-    winners = race_sim_parallel.simulate_races(np.zeros(20))
+    winners = race_sim_parallel.simulate_races(np.zeros(competetor_params.n_competetors))
 
     plot_winners(competetor_params.n_competetors, winners, "output/fig")
