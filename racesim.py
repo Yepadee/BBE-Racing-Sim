@@ -44,10 +44,6 @@ def calculate_decimal_odds(n_events: int, predicted_winners: np.int8) -> np.int3
     probs: np.int32 =  winner_freqs / predicted_winners.size
     return np.array([prob_to_odds(prob) for prob in probs])
 
-
-
-
-
 def load_racesim_params():
     '''
     Open and parse racesim config
@@ -305,12 +301,18 @@ if __name__ == "__main__":
 
     n_races = 100000
 
-    #race_sim_serial = RaceSimSerial(track_params, competetor_params)
+    race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
 
-    #race_sim_serial.step(200)
-    #competetor_positions = race_sim_serial.get_competetor_positions()
+    GPU = True
 
-    winners = race_sim_parallel.simulate_races(np.zeros(competetor_params.n_competetors))
-
-    plot_winners(competetor_params.n_competetors, winners, "output/fig")
+    if GPU:
+        competetor_positions = race_sim_serial.get_competetor_positions()
+        winners = race_sim_parallel.simulate_races(np.zeros(competetor_params.n_competetors))
+        plot_winners(competetor_params.n_competetors, winners, "output/fig")
+    else:
+        rtime = time()
+        for i in range(n_races):
+            race_sim_serial.step(track_params.n_steps)
+        rtime = time() - rtime
+        print("The kernel ran in", rtime, "seconds")
