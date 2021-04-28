@@ -4,8 +4,6 @@ sys.path.append('../BBE-Racing-Sim/')
 from racesim import *
 from output_odds import plot_odds, plot_positions
 
-from functools import reduce
-
 
 '''Load racesim config'''
 track_params, competetor_params = load_racesim_params()

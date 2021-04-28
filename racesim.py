@@ -30,7 +30,7 @@ def prob_to_odds(prob: np.float32) -> np.int32:
     inverse = 1.0 / prob
     if inverse < 1000:
         integer_odds = round(inverse * 100)
-        if integer_odds == 1:
+        if integer_odds == 100:
             integer_odds += 1
         return integer_odds
     else:
@@ -70,7 +70,7 @@ def load_racesim_params():
     conditions = np.array(config["conditions"]).astype(np.float32)
     preferences = np.array(competetors["preferences"][:n_competetors]).astype(np.float32)
 
-    dist_params = np.array(competetors["dist_params"][:n_competetors]).flatten().astype(np.float32)
+    dist_params = np.array(competetors["dist_params"][:n_competetors]).flatten().astype(np.float32) / 2.0
 
     responsiveness = competetors["responsiveness"]
     resp_levels = np.array(responsiveness["levels"][:n_competetors]).flatten().astype(np.float32)
