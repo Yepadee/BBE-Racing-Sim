@@ -40,4 +40,4 @@ all_positions = np.array(all_positions)
 all_odds = np.array(all_odds)
 
 #plot_odds(n_competetors, all_odds, "output/odds")
-plot_positions(n_competetors, all_positions, "output/positions")
+plot_positions(n_competetors, 1, all_positions, "output/positions")
