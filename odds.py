@@ -2,7 +2,7 @@ import sys
 sys.path.append('../BBE-Racing-Sim/')
 
 from racesim import *
-from output_odds import plot_odds, plot_positions
+from plot import plot_odds, plot_positions
 
 
 '''Load racesim config'''

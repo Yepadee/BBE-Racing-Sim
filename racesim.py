@@ -2,7 +2,6 @@ import pyopencl as cl
 import numpy as np
 from time import time
 import random
-import os 
 import json
 import os
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
@@ -236,7 +235,9 @@ class RaceSimSerial(RaceSim):
     def get_percent_complete(self) -> float:
         positions: np.float32 = self.get_competetor_positions()
         max_position = np.max(positions)
-        return max_position / self._track_params.length
+        length = self._track_params.length
+        max_position = max_position if max_position < length else length
+        return max_position / length
 
     def step(self, n_steps) -> None:
         '''Complete 'n_steps' of the simulation'''
