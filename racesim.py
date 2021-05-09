@@ -115,8 +115,10 @@ class CompetetorParams(object):
         
         self.n_competetors = n_competetors
 
+        normalisation = np.linalg.norm(np.full(track_conditions.shape, max_condition_value))
+
         def condition_score(x):
-            score = 1.0 - np.linalg.norm(abs(track_conditions-x))/max_condition_value
+            score = 1.0 - np.linalg.norm(abs(track_conditions-x))/normalisation
             return (1.0 - preference_weight) + preference_weight * score
 
         self.preference_scores = np.array([condition_score(p) for p in track_preferences]).astype(np.float32)
@@ -300,7 +302,7 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 100000
+    n_races = 10000
 
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
