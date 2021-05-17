@@ -235,8 +235,7 @@ class RaceSimSerial(RaceSim):
 
     def get_competetor_positions(self) -> np.array(np.float32):
         '''Returns the competetor positions'''
-        print(self._h_positions.flatten())
-        return np.copy(self._h_positions[0]).flatten()
+        return np.copy(self._h_positions).flatten()
 
     def get_percent_complete(self) -> float:
         positions: np.float32 = self.get_competetor_positions()
@@ -295,12 +294,14 @@ class RaceSimParallel(RaceSim):
         rtime = time() - rtime
         print("The kernel ran in", rtime, "seconds")
 
-        winners =  self._get_winners()
+        winners = self._get_winners()
+        
         num_incomplete: int = np.sum(winners == 0)
-        if np.count_nonzero(self._h_winners == 0):
+        if np.count_nonzero(winners == 0):
             raise Exception(f"{num_incomplete} races did not finish. Consider increaseing 'num_steps'")
 
-        return np.array([pick_winner(winner) for winner in self._h_winners]).astype(np.int8)
+        chosen_winners = np.array([pick_winner(winner) for winner in winners]).astype(np.int8)
+        return chosen_winners
 
 if __name__ == "__main__":
     from sim_output import plot_winners

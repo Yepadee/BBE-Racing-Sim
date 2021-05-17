@@ -23,19 +23,23 @@ while not race.is_finished():
     '''Get the current competetor positions'''
     competetor_positions = race.get_competetor_positions()
     all_positions.append(competetor_positions)
-    
+
     print("Running simulations...")
     '''Run all the simulations from these positions'''
     predicted_winners = race_simulations.simulate_races(competetor_positions)
+    #print(predicted_winners)
     print("Simulations complete!")
 
     odds = calculate_decimal_odds(n_competetors, predicted_winners)
+    print(odds)
     all_odds.append(odds)
 
     race.step(opinion_update_period)
 
 all_positions = np.array(all_positions)
 all_odds = np.array(all_odds)
+
+print(race.get_winner())
 
 plot_odds(n_competetors, 1, all_odds, "output/odds")
 plot_positions(n_competetors, 1, all_positions, "output/positions-odds")
