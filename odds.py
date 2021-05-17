@@ -3,7 +3,7 @@ sys.path.append('../BBE-Racing-Sim/')
 
 from racesim import *
 from plot import plot_odds, plot_positions
-
+from sim_output import plot_winners
 
 '''Load racesim config'''
 track_params, competetor_params = load_racesim_params()
@@ -15,26 +15,28 @@ n_simulations = 1000
 race: RaceSimSerial = RaceSimSerial(track_params, competetor_params)
 race_simulations: RaceSimParallel = RaceSimParallel(n_simulations, track_params, competetor_params)
 
-opinion_update_period: int = 1
+opinion_update_period: int = 50
 
 all_odds = []
 all_positions = []
+t = 0
 while not race.is_finished():
     '''Get the current competetor positions'''
     competetor_positions = race.get_competetor_positions()
     all_positions.append(competetor_positions)
-
+    print(competetor_positions)
     print("Running simulations...")
     '''Run all the simulations from these positions'''
     predicted_winners = race_simulations.simulate_races(competetor_positions)
+    plot_winners(n_competetors, predicted_winners, "output/wins/fig" + str(t) + ".png")
     #print(predicted_winners)
     print("Simulations complete!")
 
     odds = calculate_decimal_odds(n_competetors, predicted_winners)
-    print(odds)
     all_odds.append(odds)
 
     race.step(opinion_update_period)
+    t += opinion_update_period
 
 all_positions = np.array(all_positions)
 all_odds = np.array(all_odds)

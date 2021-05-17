@@ -194,6 +194,7 @@ class RaceSim(object):
 
     def set_competetor_positions(self, competetor_positions: np.float32) -> None:
         self._h_positions = self.__format_positions(competetor_positions)
+        print(self._h_positions)
         self._h_winners = np.zeros(self.__n_races).astype(np.int64)
         mf = cl.mem_flags
         self._d_positions = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_positions) # Read and write
@@ -307,7 +308,7 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 100000
+    n_races = 10000
 
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)
