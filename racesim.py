@@ -87,6 +87,8 @@ def get_gpu_context():
                      p.get_devices(device_type=cl.device_type.GPU) != []),
                      None)
     my_gpu_devices = platform.get_devices(device_type=cl.device_type.GPU)
+    print("Max CUs: %d" % my_gpu_devices[0].max_compute_units)
+    print("Max WG Size: %d" % my_gpu_devices[0].max_work_group_size)
     return cl.Context(devices=my_gpu_devices)
 
 def get_cpu_context():
@@ -96,7 +98,8 @@ def get_cpu_context():
                      p.get_devices(device_type=cl.device_type.CPU) != []),
                      None)
     my_cpu_devices = platform.get_devices(device_type=cl.device_type.CPU)
-    print(my_cpu_devices)
+    print("Max CUs: %d" % my_cpu_devices[0].max_compute_units)
+    print("Max WG Size: %d" % my_cpu_devices[0].max_work_group_size)
     return cl.Context(devices=my_cpu_devices)
 
 class TrackParams(object):
@@ -115,10 +118,10 @@ class CompetetorParams(object):
         
         self.n_competetors = n_competetors
 
-        normalisation = np.linalg.norm(np.full(track_conditions.shape, max_condition_value))
+        normalisation = np.linalg.norm(np.full(track_conditions.shape, 1))
 
         def condition_score(x):
-            score = 1.0 - np.linalg.norm(abs(track_conditions-x))/normalisation
+            score = 1.0 - np.linalg.norm(abs(track_conditions-x)/max_condition_value)/normalisation
             return (1.0 - preference_weight) + preference_weight * score
 
         self.preference_scores = np.array([condition_score(p) for p in track_preferences]).astype(np.float32)
@@ -159,7 +162,6 @@ class RaceSim(object):
 
         # Create a command queue
         self._queue = cl.CommandQueue(context)
-
         program = self.__build_program(context)
         self.update_positions = program.update_positions
         self.update_positions.set_scalar_arg_dtypes([None, None, None, None, None, None, None, np.int64])
@@ -187,7 +189,8 @@ class RaceSim(object):
         Allocate memory for competetor positions using
         provided positions for each race instance
         '''
-        return np.tile(positions, (self.__n_races, 1)).astype(np.float32)
+        
+        return np.transpose(np.tile(positions, (self.__n_races, 1))).astype(np.float32)
 
     def set_competetor_positions(self, competetor_positions: np.float32) -> None:
         self._h_positions = self.__format_positions(competetor_positions)
@@ -232,7 +235,8 @@ class RaceSimSerial(RaceSim):
 
     def get_competetor_positions(self) -> np.array(np.float32):
         '''Returns the competetor positions'''
-        return np.copy(self._h_positions[0])
+        print(self._h_positions.flatten())
+        return np.copy(self._h_positions[0]).flatten()
 
     def get_percent_complete(self) -> float:
         positions: np.float32 = self.get_competetor_positions()
@@ -302,7 +306,7 @@ if __name__ == "__main__":
     from sim_output import plot_winners
     track_params, competetor_params = load_racesim_params()
 
-    n_races = 10000
+    n_races = 100000
 
     race_sim_serial = RaceSimSerial(track_params, competetor_params)
     race_sim_parallel = RaceSimParallel(n_races, track_params, competetor_params)

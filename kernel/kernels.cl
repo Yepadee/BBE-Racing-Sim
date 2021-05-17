@@ -1,7 +1,6 @@
 #include "<kernel_location>/mwc64x_rng.cl"
-
-#define positions(r, c) positions[c + r*n_c]
-#define tmp_positions(r, c) tmp_positions[c + r*n_c]
+#define positions(r, c) positions[r + c*n_r]
+#define tmp_positions(r, c) tmp_positions[r + c*n_r]
 
 #define rngs(c, n) rngs[n + 2*c]
 #define rs(c, n) rs[n + 3*c]
