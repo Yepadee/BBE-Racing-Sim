@@ -190,11 +190,11 @@ class RaceSim(object):
         provided positions for each race instance
         '''
         
-        return np.transpose(np.tile(positions, (self.__n_races, 1))).astype(np.float32)
+        return np.transpose(np.tile(positions, (self.__n_races, 1))).flatten().astype(np.float32)
 
     def set_competetor_positions(self, competetor_positions: np.float32) -> None:
         self._h_positions = self.__format_positions(competetor_positions)
-        print(self._h_positions)
+        
         self._h_winners = np.zeros(self.__n_races).astype(np.int64)
         mf = cl.mem_flags
         self._d_positions = cl.Buffer(self.__context, mf.COPY_HOST_PTR, hostbuf=self._h_positions) # Read and write

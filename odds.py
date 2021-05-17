@@ -24,12 +24,10 @@ while not race.is_finished():
     '''Get the current competetor positions'''
     competetor_positions = race.get_competetor_positions()
     all_positions.append(competetor_positions)
-    print(competetor_positions)
     print("Running simulations...")
     '''Run all the simulations from these positions'''
     predicted_winners = race_simulations.simulate_races(competetor_positions)
     plot_winners(n_competetors, predicted_winners, "output/wins/fig" + str(t) + ".png")
-    #print(predicted_winners)
     print("Simulations complete!")
 
     odds = calculate_decimal_odds(n_competetors, predicted_winners)
