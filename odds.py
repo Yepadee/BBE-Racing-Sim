@@ -15,7 +15,7 @@ n_simulations = 1000
 race: RaceSimSerial = RaceSimSerial(track_params, competetor_params)
 race_simulations: RaceSimParallel = RaceSimParallel(n_simulations, track_params, competetor_params)
 
-opinion_update_period: int = 50
+opinion_update_period: int = 1
 
 all_odds = []
 all_positions = []
@@ -27,7 +27,6 @@ while not race.is_finished():
     print("Running simulations...")
     '''Run all the simulations from these positions'''
     predicted_winners = race_simulations.simulate_races(competetor_positions)
-    plot_winners(n_competetors, predicted_winners, "output/wins/fig" + str(t) + ".png")
     print("Simulations complete!")
 
     odds = calculate_decimal_odds(n_competetors, predicted_winners)
