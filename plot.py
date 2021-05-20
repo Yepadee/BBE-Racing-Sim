@@ -21,7 +21,7 @@ def plot_odds(n_competetors: int, actions_per_period: int, odds: np.float32, fig
     ax.set_yticks([1.0, 2.0, 4.0, 8.0, 16.0, 32.0])
 
     ax.set_ylabel('Decimal Odds')
-    ax.set_xlabel('Time/s')
+    ax.set_xlabel('Time (steps)')
     
     dir_path = os.path.dirname(fig_path)
 

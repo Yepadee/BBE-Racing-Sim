@@ -265,7 +265,7 @@ class RaceSimSerial(RaceSim):
 
 class RaceSimParallel(RaceSim):
     def __init__(self, n_races: int, track_params: TrackParams, competetor_params: CompetetorParams):
-        context = get_gpu_context()
+        context = get_cpu_context()
         super().__init__(context, n_races, track_params, competetor_params)
 
     def __get_steps_remaining(self, max_steps: int, competetor_positions: np.float32, track_length: int) -> int:
